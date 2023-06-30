@@ -1,0 +1,2409 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[    109783,       2401]
+NotebookOptionsPosition[    107546,       2352]
+NotebookOutlinePosition[    107981,       2369]
+CellTagsIndexPosition[    107938,       2366]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["M-Waves", "Title",
+ CellChangeTimes->{{3.8667129845109053`*^9, 3.866712990916603*^9}, {
+   3.867241744044541*^9, 3.8672417457268343`*^9}, {3.8674939713349133`*^9, 
+   3.8674939744945908`*^9}, 3.868119073222102*^9, {3.897058169586672*^9, 
+   3.897058170384892*^9}},
+ TextAlignment->Center,ExpressionUUID->"4e77af89-c8c7-46cd-9704-2b3d5890d251"],
+
+Cell[TextData[{
+ "Here is some code that can be used to propagate a field in a homogeneous \
+medium. It implements an approximation of the Rayleigh-Sommerfeld diffraction \
+integral using a fast Fourier transform method proposed by Shen and Wang in \
+2006. It also includes the ability to import color-maps that were ported over \
+from a Python module called ",
+ StyleBox["cmasher",
+  IgnoreSpellCheck->True,
+  FontSlant->"Italic"],
+ "."
+}], "Text",
+ CellChangeTimes->{{3.867313479646329*^9, 3.867313541240609*^9}, {
+  3.867494097408901*^9, 3.867494112871245*^9}, {3.867494223458796*^9, 
+  3.867494393791688*^9}, {3.8674958013779573`*^9, 3.867495801929586*^9}, {
+  3.867496281190825*^9, 3.867496476865309*^9}, {3.867500921767235*^9, 
+  3.867500924549768*^9}, {3.867501014121676*^9, 3.8675010151106853`*^9}, {
+  3.867750447717952*^9, 3.86775071662468*^9}, {3.867751251318488*^9, 
+  3.8677512567242413`*^9}, {3.867751308352212*^9, 3.8677513222878647`*^9}, {
+  3.867751470617586*^9, 3.8677515081742373`*^9}, {3.8677742751168413`*^9, 
+  3.8677743077217817`*^9}, {3.868119079519093*^9, 3.868119303359166*^9}, {
+  3.868119396520648*^9, 3.868119407171563*^9}, {3.868120326318486*^9, 
+  3.868120327247776*^9}, {3.897058842253338*^9, 3.897058985629917*^9}},
+ TextAlignment->Center,ExpressionUUID->"6580d737-07c5-4db8-886b-36bd9e1ae0c5"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"AppendTo", "[", 
+   RowBox[{"$Path", ",", 
+    RowBox[{"NotebookDirectory", "[", "]"}]}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Get", "[", "\"\<mwaves.m\>\"", "]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"emberColorFunction", "=", 
+   RowBox[{"GetColorMap", "[", "\"\<ember\>\"", "]"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.897052900027746*^9, 3.897052900612924*^9}, {
+  3.8970558809457073`*^9, 3.897055881053605*^9}},
+ CellLabel->"In[1]:=",ExpressionUUID->"c36afee8-70ba-4f5c-9156-44a287de0303"],
+
+Cell[CellGroupData[{
+
+Cell["ScalarFieldProp", "Section",
+ CellChangeTimes->{{3.896463919585335*^9, 3.896463928598584*^9}, {
+   3.897052600958274*^9, 3.8970526370544577`*^9}, {3.897058185646338*^9, 
+   3.8970581874249287`*^9}, 3.8971276991812572`*^9, 
+   3.897127929508378*^9},ExpressionUUID->"84e4fbe5-cdf8-482a-92a2-\
+0b1b41abad2f"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"?", "ScalarFieldProp"}]], "Input",
+ CellChangeTimes->{{3.8970581906854687`*^9, 3.897058194528695*^9}, 
+   3.8971276983596582`*^9, 3.897127748568653*^9},
+ CellLabel->"In[13]:=",ExpressionUUID->"9583258e-6968-411a-9bfb-bcce54040e08"],
+
+Cell[BoxData[
+ InterpretationBox[
+  StyleBox[
+   FrameBox[
+    DynamicModuleBox[{System`InformationDump`open$$ = False, 
+     System`InformationDump`mouseOver$$ = False}, 
+     PaneSelectorBox[{True->
+      TagBox[GridBox[{
+         {
+          ItemBox[
+           PaneBox[
+            StyleBox["\<\" Symbol\"\>", "InformationTitleText",
+             StripOnInput->False,
+             BaseStyle -> None],
+            FrameMargins->{{4, 0}, {-1, 1}}],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False]},
+         {
+          ItemBox[
+           PaneBox[
+            
+            StyleBox["\<\"ScalarFieldProp takes a field component in an \
+aperture plane and propagates that to an observation plane by using an \
+implementation of the direct integration of the Rayleigh-Sommerfeld \
+diffraction integral. This implementation is based on the method described in \
+Shen and Wang (2006). The field is sampled in the aperture plane using a \
+uniform grid, and the observation plane is also sampled using a uniform grid. \
+The field is assumed to be zero outside of the aperture plane. Contrary to \
+the Fresnel or Kirchhoff integrals, the Rayleigh-Sommerfeld integral does not \
+require the use of the paraxial approximation, and is therefore valid for \
+arbitrary distances between the aperture plane and the observation plane. \
+Here these two planes are assumed to be \
+parallel.\\n\\nParameters\\n----------\\n+ Lobs (float): spatial width of the \
+obsevation region, in \[Mu]m. The observation region is assumed to be a \
+squared centered on (x,y) = (0,0), and extending from -Lobs/2 to Lobs/2 in \
+both the x and y directions.\\n+ z (float): distance between the aperture \
+plane and the observation plane, given in \[Mu]m. The aperture plane is \
+assumed to be at z=0.\\n+ apertureFunction (function): a bi-variate function \
+that returns the complex amplitude of the field in the aperture plane. Input \
+to the function is assumed to be in cartesian coordinates x,y.\\n+ \
+\[Lambda]free (float): wavelength in vaccum of field, given in \[Mu]m.\\n+ \
+nref  (float): refractive index of the propagating \
+medium.\\n\\nOptions\\n-------\\n+ \\\"numSamples\\\" (int or Automatic): \
+number of samples to use in the aperture plane and the observation plane. The \
+aperture plane is sampled using a uniform grid, and the observation plane is \
+also sampled using a uniform grid. The default is Automatic in which case \
+numSamples is calculated so that the sample size is equal to half the \
+wavelength of the wave inside of the propagating \
+medium.\\n\\nReturns\\n-------\\n{numSamples, xCoords, yCoords, field}\\n+ \
+xCoords (List): x coordinates of the observation plane, given in \[Mu]m.\\n+ \
+yCoords (List): y coordinates of the observation plane, given in \[Mu]m.\\n+ \
+field   (List): complex amplitude of the field in the observation plane. The \
+top left corner of the array corresponds to the lower left corner of the \
+observation plane. The coordinates associated with each element in the given \
+list should be taken from xCoords and \
+yCoords.\\n\\nReferences\\n----------\\n+ Shen, Fabin, and Anbo Wang. \
+\\\"Fast-Fourier-transform based numerical integration method for the \
+Rayleigh-Sommerfeld diffraction formula.\\\" Applied optics 45, no. 6 (2006): \
+1102-1110.\\n\\nExample (double slit \
+diffraction)\\n---------------------------------\\n(*geometry of the double \
+slits*)\\n{slitSep, slitWidth, slitLen} = {3, 1, 4};\\n\\n(*full width of the \
+observation plane*)\\nLobs = 10;\\nnumSamples = 100;\\nz    = 10;\\n\[Lambda] \
+= 0.532;\\n\\ndoubleSlit = \\n  Compile[{{x, _Real}, {y, _Real}}, (If[\\n     \
+ And[Abs[x - slitSep/2] < slitWidth/2, Abs[y] < slitLen/2], 1., 0.] \\n      \
++ If[And[Abs[x + slitSep/2] < slitWidth/2, Abs[y] < slitLen/2],\\n      1., \
+\\n      0.])];\\n\\n({xCoord, yCoord, field} = ScalarFieldProp[Lobs, z, \
+doubleSlit, \[Lambda]];\\n ArrayPlot[Abs[field], FrameTicks -> Automatic, \
+DataReversed -> True, \\n  ImageSize -> 800, \\n  DataRange -> {{-Lobs/2, \
+Lobs/2}, {-Lobs/2, Lobs/2}}])\\n\\n\"\>", "InformationUsageText",
+             StripOnInput->False,
+             LineSpacing->{1.5, 1.5, 3.}],
+            FrameMargins->{{10, 10}, {8, 10}}],
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False]},
+         {
+          PaneBox[
+           TagBox[GridBox[{
+              {
+               StyleBox[
+                TagBox[
+                 TooltipBox[
+                  StyleBox["\<\" Definitions\"\>", "InformationRowLabel",
+                   StripOnInput->False],
+                  "\"Definitions\"",
+                  TooltipStyle->"TextStyling"],
+                 Annotation[#, "Definitions", "Tooltip"]& ], "DialogStyle",
+                StripOnInput->False]},
+              {
+               TemplateBox[{"\"\[ThinSpace]\"", 
+                 GridBox[{{
+                    RowBox[{
+                    RowBox[{"ScalarFieldProp", "[", 
+                    
+                    RowBox[{
+                    "Lobs_", ",", "z_", ",", "apertureFunction_", ",", 
+                    "\[Lambda]free_", ",", 
+                    RowBox[{"nref_", ":", "1"}], ",", 
+                    RowBox[{"OptionsPattern", "[", "]"}]}], "]"}], ":=", 
+                    RowBox[{"(", 
+                    RowBox[{
+                    RowBox[{"\[Lambda]", "=", 
+                    FractionBox["\[Lambda]free", "nref"]}], ";", 
+                    RowBox[{"If", "[", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"OptionValue", "[", "\"numSamples\"", "]"}], 
+                    "\[Equal]", "Automatic"}], ",", 
+                    RowBox[{
+                    RowBox[{"numSamples", "=", 
+                    RowBox[{"Round", "[", 
+                    FractionBox[
+                    RowBox[{"2", " ", "Lobs"}], "\[Lambda]"], "]"}]}], ";"}], 
+                    ",", 
+                    RowBox[{
+                    RowBox[{"numSamples", "=", 
+                    RowBox[{"OptionValue", "[", "\"numSamples\"", "]"}]}], 
+                    ";"}]}], "]"}], ";", 
+                    RowBox[{"apertureSamples", "=", "numSamples"}], ";", 
+                    RowBox[{"Lap", "=", "Lobs"}], ";", 
+                    RowBox[{"k", "=", 
+                    FractionBox[
+                    RowBox[{"2.`", " ", "\[Pi]"}], "\[Lambda]"]}], ";", 
+                    RowBox[{"\[CapitalDelta]\[Zeta]", "=", 
+                    FractionBox["Lap", "apertureSamples"]}], ";", 
+                    
+                    RowBox[{
+                    "\[CapitalDelta]\[Eta]", "=", "\[CapitalDelta]\[Zeta]"}], 
+                    ";", 
+                    RowBox[{"g", "=", 
+                    RowBox[{"Compile", "[", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", 
+                    FractionBox[
+                    RowBox[{
+                    SuperscriptBox["\[ExponentialE]", 
+                    RowBox[{"\[ImaginaryI]", " ", "k", " ", 
+                    SqrtBox[
+                    RowBox[{
+                    SuperscriptBox["x", "2"], "+", 
+                    SuperscriptBox["y", "2"], "+", 
+                    SuperscriptBox["z", "2"]}]]}]], " ", "z", " ", 
+                    RowBox[{"(", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"-", "\[ImaginaryI]"}], " ", "k"}], "+", 
+                    FractionBox["1", 
+                    SqrtBox[
+                    RowBox[{
+                    SuperscriptBox["x", "2"], "+", 
+                    SuperscriptBox["y", "2"], "+", 
+                    SuperscriptBox["z", "2"]}]]]}], ")"}]}], 
+                    RowBox[{"2.`", " ", "\[Pi]", " ", 
+                    RowBox[{"(", 
+                    RowBox[{
+                    SuperscriptBox["x", "2"], "+", 
+                    SuperscriptBox["y", "2"], "+", 
+                    SuperscriptBox["z", "2"]}], ")"}]}]]}], "]"}]}], ";", 
+                    RowBox[{"gr", "=", 
+                    RowBox[{"Compile", "[", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    RowBox[{"{", 
+                    RowBox[{"r", ",", "_Real"}], "}"}], "}"}], ",", 
+                    FractionBox[
+                    RowBox[{"z", " ", 
+                    RowBox[{"(", 
+                    RowBox[{
+                    SuperscriptBox["\[ExponentialE]", 
+                    RowBox[{"\[ImaginaryI]", " ", "k", " ", "r"}]], " ", 
+                    RowBox[{"(", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"-", "\[ImaginaryI]"}], " ", "k"}], "+", 
+                    FractionBox["1.`", "r"]}], ")"}]}], ")"}]}], 
+                    RowBox[{
+                    RowBox[{"(", 
+                    RowBox[{"2.`", " ", "\[Pi]"}], ")"}], " ", 
+                    SuperscriptBox["r", "2"]}]]}], "]"}]}], ";", 
+                    RowBox[{"\[Zeta]", "=", 
+                    RowBox[{"N", "[", 
+                    RowBox[{"Range", "[", 
+                    RowBox[{
+                    RowBox[{"-", 
+                    FractionBox["Lap", "2"]}], ",", 
+                    FractionBox["Lap", "2"], ",", 
+                    FractionBox["Lap", 
+                    RowBox[{"apertureSamples", "-", "1"}]]}], "]"}], "]"}]}], 
+                    ";", 
+                    RowBox[{"\[Eta]", "=", 
+                    RowBox[{"N", "[", 
+                    RowBox[{"Range", "[", 
+                    RowBox[{
+                    RowBox[{"-", 
+                    FractionBox["Lap", "2"]}], ",", 
+                    FractionBox["Lap", "2"], ",", 
+                    FractionBox["Lap", 
+                    RowBox[{"apertureSamples", "-", "1"}]]}], "]"}], "]"}]}], 
+                    ";", 
+                    RowBox[{"x", "=", 
+                    RowBox[{"N", "[", 
+                    RowBox[{"Range", "[", 
+                    RowBox[{
+                    RowBox[{"-", 
+                    FractionBox["Lobs", "2"]}], ",", 
+                    FractionBox["Lobs", "2"], ",", 
+                    FractionBox["Lobs", 
+                    RowBox[{"numSamples", "-", "1"}]]}], "]"}], "]"}]}], ";", 
+                    
+                    RowBox[{"y", "=", 
+                    RowBox[{"N", "[", 
+                    RowBox[{"Range", "[", 
+                    RowBox[{
+                    RowBox[{"-", 
+                    FractionBox["Lobs", "2"]}], ",", 
+                    FractionBox["Lobs", "2"], ",", 
+                    FractionBox["Lobs", 
+                    RowBox[{"numSamples", "-", "1"}]]}], "]"}], "]"}]}], ";", 
+                    
+                    RowBox[{"coordArray", "=", 
+                    RowBox[{"Outer", "[", 
+                    RowBox[{"List", ",", "\[Zeta]", ",", "\[Eta]"}], "]"}]}], 
+                    ";", 
+                    RowBox[{"U", "=", 
+                    RowBox[{"Map", "[", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"apertureFunction", "@@", "#1"}], "&"}], ",", 
+                    "coordArray", ",", 
+                    RowBox[{"{", "2", "}"}]}], "]"}]}], ";", 
+                    RowBox[{"U", "=", 
+                    RowBox[{"PadRight", "[", 
+                    RowBox[{"U", ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}], ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "}"}]}], "]"}]}], ";", 
+                    RowBox[{"Hx1", "=", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{
+                    
+                    RowBox[{"x", "\[LeftDoubleBracket]", "1", 
+                    "\[RightDoubleBracket]"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"apertureSamples", "-", "1"}], ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "}"}]}], "]"}]}], ";", 
+                    RowBox[{"Hx2", "=", 
+                    RowBox[{"Transpose", "[", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{"x", ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "]"}], "]"}]}], ";", 
+                    RowBox[{"Hx", "=", 
+                    RowBox[{"ArrayFlatten", "[", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"{", "Hx1", "}"}], ",", 
+                    RowBox[{"{", "Hx2", "}"}]}], "}"}], "]"}]}], ";", 
+                    RowBox[{"H\[Zeta]2", "=", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{
+                    
+                    RowBox[{"\[Zeta]", "\[LeftDoubleBracket]", "1", 
+                    "\[RightDoubleBracket]"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"apertureSamples", "-", "1"}], ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "}"}]}], "]"}]}], ";", 
+                    RowBox[{"H\[Zeta]1", "=", 
+                    RowBox[{"Transpose", "[", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{
+                    RowBox[{"Reverse", "[", "\[Zeta]", "]"}], ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "]"}], "]"}]}], ";", 
+                    RowBox[{"H\[Zeta]", "=", 
+                    RowBox[{"ArrayFlatten", "[", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"{", "H\[Zeta]1", "}"}], ",", 
+                    RowBox[{"{", "H\[Zeta]2", "}"}]}], "}"}], "]"}]}], ";", 
+                    RowBox[{"Hx\[Zeta]", "=", 
+                    RowBox[{"Hx", "-", "H\[Zeta]"}]}], ";", 
+                    RowBox[{"Hy1", "=", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{
+                    
+                    RowBox[{"y", "\[LeftDoubleBracket]", "1", 
+                    "\[RightDoubleBracket]"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"apertureSamples", "-", "1"}], ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "}"}]}], "]"}]}], ";", 
+                    RowBox[{"Hy2", "=", 
+                    RowBox[{"Transpose", "[", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{"y", ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "]"}], "]"}]}], ";", 
+                    RowBox[{"Hy", "=", 
+                    RowBox[{"Transpose", "[", 
+                    RowBox[{"ArrayFlatten", "[", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"{", "Hy1", "}"}], ",", 
+                    RowBox[{"{", "Hy2", "}"}]}], "}"}], "]"}], "]"}]}], ";", 
+                    RowBox[{"H\[Eta]2", "=", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{
+                    
+                    RowBox[{"\[Eta]", "\[LeftDoubleBracket]", "1", 
+                    "\[RightDoubleBracket]"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"apertureSamples", "-", "1"}], ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "}"}]}], "]"}]}], ";", 
+                    RowBox[{"H\[Eta]1", "=", 
+                    RowBox[{"Transpose", "[", 
+                    RowBox[{"ConstantArray", "[", 
+                    RowBox[{
+                    RowBox[{"Reverse", "[", "\[Eta]", "]"}], ",", 
+                    RowBox[{
+                    RowBox[{"2", " ", "apertureSamples"}], "-", "1"}]}], 
+                    "]"}], "]"}]}], ";", 
+                    RowBox[{"H\[Eta]", "=", 
+                    RowBox[{"Transpose", "[", 
+                    RowBox[{"ArrayFlatten", "[", 
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"{", "H\[Eta]1", "}"}], ",", 
+                    RowBox[{"{", "H\[Eta]2", "}"}]}], "}"}], "]"}], "]"}]}], 
+                    ";", 
+                    RowBox[{"Hy\[Eta]", "=", 
+                    RowBox[{"Hy", "-", "H\[Eta]"}]}], ";", 
+                    RowBox[{"x\[Zeta]y\[Eta]coordArray", "=", 
+                    RowBox[{"{", 
+                    RowBox[{"Hx\[Zeta]", ",", "Hy\[Eta]"}], "}"}]}], ";", 
+                    RowBox[{"x\[Zeta]y\[Eta]coordArray", "=", 
+                    RowBox[{"Transpose", "[", 
+                    RowBox[{"x\[Zeta]y\[Eta]coordArray", ",", 
+                    RowBox[{"{", 
+                    RowBox[{"3", ",", "1", ",", "2"}], "}"}]}], "]"}]}], ";", 
+                    
+                    RowBox[{"ClearAll", "[", 
+                    
+                    RowBox[{"Hx1", ",", "Hx2", ",", "Hx", ",", "H\[Zeta]1", 
+                    ",", "H\[Zeta]2", ",", "H\[Zeta]1", ",", "Hx\[Zeta]", ",",
+                     "Hy1", ",", "Hy2", ",", "Hy", ",", "H\[Eta]1", ",", 
+                    "H\[Eta]2", ",", "H\[Eta]", ",", "Hy\[Eta]"}], "]"}], ";", 
+                    RowBox[{"rFun", "=", 
+                    RowBox[{"Compile", "[", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+                    RowBox[{"{", 
+                    RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", 
+                    SqrtBox[
+                    RowBox[{
+                    SuperscriptBox["x", "2"], "+", 
+                    SuperscriptBox["y", "2"], "+", 
+                    SuperscriptBox["z", "2"]}]]}], "]"}]}], ";", 
+                    RowBox[{"rEva", "=", 
+                    RowBox[{"Map", "[", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"rFun", "@@", "#1"}], "&"}], ",", 
+                    "x\[Zeta]y\[Eta]coordArray", ",", 
+                    RowBox[{"{", "2", "}"}]}], "]"}]}], ";", 
+                    RowBox[{"H", "=", 
+                    RowBox[{"Map", "[", 
+                    RowBox[{"gr", ",", "rEva", ",", 
+                    RowBox[{"{", "2", "}"}]}], "]"}]}], ";", 
+                    RowBox[{"FFU", "=", 
+                    RowBox[{"Fourier", "[", "U", "]"}]}], ";", 
+                    RowBox[{"FFH", "=", 
+                    RowBox[{"Fourier", "[", "H", "]"}]}], ";", 
+                    RowBox[{"FFUH", "=", 
+                    RowBox[{"FFU", " ", "FFH"}]}], ";", 
+                    RowBox[{"S", "=", 
+                    RowBox[{"InverseFourier", "[", "FFUH", "]"}]}], ";", 
+                    RowBox[{"field", "=", 
+                    
+                    RowBox[{"\[CapitalDelta]\[Eta]", " ", 
+                    "\[CapitalDelta]\[Zeta]", " ", 
+                    RowBox[{"S", "\[LeftDoubleBracket]", 
+                    RowBox[{
+                    RowBox[{"apertureSamples", ";;", "All"}], ",", 
+                    RowBox[{"apertureSamples", ";;", "All"}]}], 
+                    "\[RightDoubleBracket]"}]}]}], ";", 
+                    RowBox[{"field", "=", 
+                    RowBox[{"Transpose", "[", "field", "]"}]}], ";", 
+                    RowBox[{"Return", "[", 
+                    RowBox[{"{", 
+                    RowBox[{"numSamples", ",", "x", ",", "y", ",", "field"}], 
+                    "}"}], "]"}], ";"}], ")"}]}]}, {" "}}, 
+                  GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                  DefaultBaseStyle -> "Column", 
+                  GridBoxItemSize -> {
+                   "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}]},
+                "RowDefault"]}
+             },
+             DefaultBaseStyle->"Column",
+             GridBoxAlignment->{"Columns" -> {{Left}}},
+             
+             GridBoxItemSize->{
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+            "Column"],
+           FrameMargins->{{6, 0}, {3, 6}}], "\<\"\"\>"},
+         {
+          PaneBox[GridBox[{
+             {
+              
+              DynamicModuleBox[{System`InformationDump`open$$ = {
+               False, False, False, False, False, False}}, 
+               StyleBox[GridBox[{
+                  {
+                   TagBox[
+                    TooltipBox[
+                    StyleBox["\<\" Options\"\>", "InformationRowLabel",
+                    StripOnInput->False],
+                    "\"Options\"",
+                    TooltipStyle->"TextStyling"],
+                    Annotation[#, "Options", "Tooltip"]& ], 
+                   RowBox[{"\<\"numSamples\"\>", "\[Rule]", "Automatic"}]},
+                  {
+                   TagBox[
+                    TooltipBox[
+                    StyleBox["\<\" Full Name\"\>", "InformationRowLabel",
+                    StripOnInput->False],
+                    "\"FullName\"",
+                    TooltipStyle->"TextStyling"],
+                    
+                    Annotation[#, "FullName", 
+                    "Tooltip"]& ], "\<\"mwaves`ScalarFieldProp\"\>"}
+                 },
+                 AutoDelete->False,
+                 GridBoxAlignment->{"Columns" -> {Right, Left}},
+                 GridBoxDividers->None,
+                 GridBoxItemSize->{"Columns" -> {Automatic, Automatic}},
+                 GridBoxSpacings->{"Columns" -> {
+                    Offset[0.27999999999999997`], {
+                    Offset[0.5599999999999999]}, 
+                    Offset[0.27999999999999997`]}, "Rows" -> {
+                    Offset[0.2], {
+                    Offset[0.8]}, 
+                    Offset[0.2]}}], "DialogStyle",
+                StripOnInput->False],
+               DynamicModuleValues:>{}]}
+            },
+            DefaultBaseStyle->"Column",
+            GridBoxAlignment->{"Columns" -> {{Left}}},
+            GridBoxDividers->{"Columns" -> {{False}}, "Rows" -> {{False}}},
+            
+            GridBoxItemSize->{
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}},
+            GridBoxSpacings->{"Columns" -> {
+                Offset[0.27999999999999997`], {
+                 Offset[0.5599999999999999]}, 
+                Offset[0.27999999999999997`]}, "Rows" -> {
+                Offset[0.2], {
+                 Offset[3.6]}, 
+                Offset[0.2]}}],
+           FrameMargins->{{6, 6}, {6, 3}}], ""},
+         {
+          ItemBox[
+           TagBox[
+            ButtonBox[
+             PaneSelectorBox[{False->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "UpPointerOpener"]], True->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "UpPointerOpenerHot"]]}, Dynamic[
+              System`InformationDump`mouseOver$$]],
+             Alignment->Left,
+             Appearance->{"Default" -> None},
+             
+             ButtonFunction:>FEPrivate`Set[
+              System`InformationDump`open$$, False],
+             Evaluator->Automatic,
+             FrameMargins->{{9, 0}, {0, 0}},
+             ImageMargins->0,
+             ImageSize->Full,
+             Method->"Preemptive"],
+            
+            EventHandlerTag[{
+             "MouseEntered" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, True], 
+              "MouseExited" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, False], 
+              Method -> "Preemptive", PassEventsDown -> Automatic, 
+              PassEventsUp -> True}]],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], "\[SpanFromLeft]"}
+        },
+        AutoDelete->False,
+        FrameStyle->Directive[
+          GrayLevel[0.8], 
+          Thickness[Tiny]],
+        GridBoxAlignment->{"Columns" -> {Left, Right}, "Rows" -> {{Center}}},
+        GridBoxDividers->{
+         "Columns" -> {{None}}, "Rows" -> {False, {True}, False}},
+        GridBoxItemSize->{
+         "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+       "Grid"], False->
+      TagBox[GridBox[{
+         {
+          ItemBox[
+           PaneBox[
+            StyleBox["\<\" Symbol\"\>", "InformationTitleText",
+             StripOnInput->False],
+            FrameMargins->{{4, 0}, {-1, 1}}],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False]},
+         {
+          ItemBox[
+           PaneBox[
+            
+            StyleBox["\<\"ScalarFieldProp takes a field component in an \
+aperture plane and propagates that to an observation plane by using an \
+implementation of the direct integration of the Rayleigh-Sommerfeld \
+diffraction integral. This implementation is based on the method described in \
+Shen and Wang (2006). The field is sampled in the aperture plane using a \
+uniform grid, and the observation plane is also sampled using a uniform grid. \
+The field is assumed to be zero outside of the aperture plane. Contrary to \
+the Fresnel or Kirchhoff integrals, the Rayleigh-Sommerfeld integral does not \
+require the use of the paraxial approximation, and is therefore valid for \
+arbitrary distances between the aperture plane and the observation plane. \
+Here these two planes are assumed to be \
+parallel.\\n\\nParameters\\n----------\\n+ Lobs (float): spatial width of the \
+obsevation region, in \[Mu]m. The observation region is assumed to be a \
+squared centered on (x,y) = (0,0), and extending from -Lobs/2 to Lobs/2 in \
+both the x and y directions.\\n+ z (float): distance between the aperture \
+plane and the observation plane, given in \[Mu]m. The aperture plane is \
+assumed to be at z=0.\\n+ apertureFunction (function): a bi-variate function \
+that returns the complex amplitude of the field in the aperture plane. Input \
+to the function is assumed to be in cartesian coordinates x,y.\\n+ \
+\[Lambda]free (float): wavelength in vaccum of field, given in \[Mu]m.\\n+ \
+nref  (float): refractive index of the propagating \
+medium.\\n\\nOptions\\n-------\\n+ \\\"numSamples\\\" (int or Automatic): \
+number of samples to use in the aperture plane and the observation plane. The \
+aperture plane is sampled using a uniform grid, and the observation plane is \
+also sampled using a uniform grid. The default is Automatic in which case \
+numSamples is calculated so that the sample size is equal to half the \
+wavelength of the wave inside of the propagating \
+medium.\\n\\nReturns\\n-------\\n{numSamples, xCoords, yCoords, field}\\n+ \
+xCoords (List): x coordinates of the observation plane, given in \[Mu]m.\\n+ \
+yCoords (List): y coordinates of the observation plane, given in \[Mu]m.\\n+ \
+field   (List): complex amplitude of the field in the observation plane. The \
+top left corner of the array corresponds to the lower left corner of the \
+observation plane. The coordinates associated with each element in the given \
+list should be taken from xCoords and \
+yCoords.\\n\\nReferences\\n----------\\n+ Shen, Fabin, and Anbo Wang. \
+\\\"Fast-Fourier-transform based numerical integration method for the \
+Rayleigh-Sommerfeld diffraction formula.\\\" Applied optics 45, no. 6 (2006): \
+1102-1110.\\n\\nExample (double slit \
+diffraction)\\n---------------------------------\\n(*geometry of the double \
+slits*)\\n{slitSep, slitWidth, slitLen} = {3, 1, 4};\\n\\n(*full width of the \
+observation plane*)\\nLobs = 10;\\nnumSamples = 100;\\nz    = 10;\\n\[Lambda] \
+= 0.532;\\n\\ndoubleSlit = \\n  Compile[{{x, _Real}, {y, _Real}}, (If[\\n     \
+ And[Abs[x - slitSep/2] < slitWidth/2, Abs[y] < slitLen/2], 1., 0.] \\n      \
++ If[And[Abs[x + slitSep/2] < slitWidth/2, Abs[y] < slitLen/2],\\n      1., \
+\\n      0.])];\\n\\n({xCoord, yCoord, field} = ScalarFieldProp[Lobs, z, \
+doubleSlit, \[Lambda]];\\n ArrayPlot[Abs[field], FrameTicks -> Automatic, \
+DataReversed -> True, \\n  ImageSize -> 800, \\n  DataRange -> {{-Lobs/2, \
+Lobs/2}, {-Lobs/2, Lobs/2}}])\\n\\n\"\>", "InformationUsageText",
+             StripOnInput->False,
+             LineSpacing->{1.5, 1.5, 3.}],
+            FrameMargins->{{10, 10}, {8, 10}}],
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False]},
+         {
+          ItemBox[
+           TagBox[
+            ButtonBox[
+             PaneSelectorBox[{False->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "DownPointerOpener"],
+               ImageSizeCache->{10., {2., 8.}}], True->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "DownPointerOpenerHot"],
+               ImageSizeCache->{10., {2., 8.}}]}, Dynamic[
+              System`InformationDump`mouseOver$$]],
+             Alignment->Left,
+             Appearance->{"Default" -> None},
+             
+             ButtonFunction:>FEPrivate`Set[
+              System`InformationDump`open$$, True],
+             Evaluator->Automatic,
+             FrameMargins->{{9, 0}, {0, 0}},
+             ImageMargins->0,
+             ImageSize->Full,
+             Method->"Preemptive"],
+            
+            EventHandlerTag[{
+             "MouseEntered" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, True], 
+              "MouseExited" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, False], 
+              Method -> "Preemptive", PassEventsDown -> Automatic, 
+              PassEventsUp -> True}]],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], "\[SpanFromLeft]"}
+        },
+        AutoDelete->False,
+        FrameStyle->Directive[
+          GrayLevel[0.8], 
+          Thickness[Tiny]],
+        GridBoxAlignment->{"Columns" -> {Left, Right}, "Rows" -> {{Center}}},
+        GridBoxDividers->{
+         "Columns" -> {{None}}, "Rows" -> {False, {True}, False}},
+        GridBoxItemSize->{
+         "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+       "Grid"]}, Dynamic[System`InformationDump`open$$],
+      BaselinePosition->Baseline,
+      FrameMargins->0,
+      ImageSize->Automatic],
+     DynamicModuleValues:>{}],
+    BaseStyle->"InformationGridFrame",
+    StripOnInput->False], "InformationGridPlain",
+   StripOnInput->False],
+  InformationData[<|
+   "ObjectType" -> "Symbol", "Usage" -> 
+    "ScalarFieldProp takes a field component in an aperture plane and \
+propagates that to an observation plane by using an implementation of the \
+direct integration of the Rayleigh-Sommerfeld diffraction integral. This \
+implementation is based on the method described in Shen and Wang (2006). The \
+field is sampled in the aperture plane using a uniform grid, and the \
+observation plane is also sampled using a uniform grid. The field is assumed \
+to be zero outside of the aperture plane. Contrary to the Fresnel or \
+Kirchhoff integrals, the Rayleigh-Sommerfeld integral does not require the \
+use of the paraxial approximation, and is therefore valid for arbitrary \
+distances between the aperture plane and the observation plane. Here these \
+two planes are assumed to be parallel.\n\nParameters\n----------\n+ Lobs \
+(float): spatial width of the obsevation region, in \[Mu]m. The observation \
+region is assumed to be a squared centered on (x,y) = (0,0), and extending \
+from -Lobs/2 to Lobs/2 in both the x and y directions.\n+ z (float): distance \
+between the aperture plane and the observation plane, given in \[Mu]m. The \
+aperture plane is assumed to be at z=0.\n+ apertureFunction (function): a \
+bi-variate function that returns the complex amplitude of the field in the \
+aperture plane. Input to the function is assumed to be in cartesian \
+coordinates x,y.\n+ \[Lambda]free (float): wavelength in vaccum of field, \
+given in \[Mu]m.\n+ nref  (float): refractive index of the propagating \
+medium.\n\nOptions\n-------\n+ \"numSamples\" (int or Automatic): number of \
+samples to use in the aperture plane and the observation plane. The aperture \
+plane is sampled using a uniform grid, and the observation plane is also \
+sampled using a uniform grid. The default is Automatic in which case \
+numSamples is calculated so that the sample size is equal to half the \
+wavelength of the wave inside of the propagating medium.\n\nReturns\n-------\n\
+{numSamples, xCoords, yCoords, field}\n+ xCoords (List): x coordinates of the \
+observation plane, given in \[Mu]m.\n+ yCoords (List): y coordinates of the \
+observation plane, given in \[Mu]m.\n+ field   (List): complex amplitude of \
+the field in the observation plane. The top left corner of the array \
+corresponds to the lower left corner of the observation plane. The \
+coordinates associated with each element in the given list should be taken \
+from xCoords and yCoords.\n\nReferences\n----------\n+ Shen, Fabin, and Anbo \
+Wang. \"Fast-Fourier-transform based numerical integration method for the \
+Rayleigh-Sommerfeld diffraction formula.\" Applied optics 45, no. 6 (2006): \
+1102-1110.\n\nExample (double slit diffraction)\n\
+---------------------------------\n(*geometry of the double slits*)\n\
+{slitSep, slitWidth, slitLen} = {3, 1, 4};\n\n(*full width of the observation \
+plane*)\nLobs = 10;\nnumSamples = 100;\nz    = 10;\n\[Lambda] = 0.532;\n\n\
+doubleSlit = \n  Compile[{{x, _Real}, {y, _Real}}, (If[\n      And[Abs[x - \
+slitSep/2] < slitWidth/2, Abs[y] < slitLen/2], 1., 0.] \n      + If[And[Abs[x \
++ slitSep/2] < slitWidth/2, Abs[y] < slitLen/2],\n      1., \n      0.])];\n\n\
+({xCoord, yCoord, field} = ScalarFieldProp[Lobs, z, doubleSlit, \[Lambda]];\n \
+ArrayPlot[Abs[field], FrameTicks -> Automatic, DataReversed -> True, \n  \
+ImageSize -> 800, \n  DataRange -> {{-Lobs/2, Lobs/2}, {-Lobs/2, Lobs/2}}])\n\
+\n", "Documentation" -> None, "OwnValues" -> None, "UpValues" -> None, 
+    "DownValues" -> 
+    Information`InformationValueForm[
+     DownValues, mwaves`ScalarFieldProp, {mwaves`ScalarFieldProp[
+         Pattern[mwaves`Lobs, 
+          Blank[]], 
+         Pattern[mwaves`z, 
+          Blank[]], 
+         Pattern[mwaves`apertureFunction, 
+          Blank[]], 
+         Pattern[mwaves`\[Lambda]free, 
+          Blank[]], 
+         Optional[
+          Pattern[mwaves`nref, 
+           Blank[]], 1], 
+         OptionsPattern[]] :> (
+        mwaves`\[Lambda] = mwaves`\[Lambda]free/mwaves`nref; 
+        If[OptionValue["numSamples"] == Automatic, 
+          mwaves`numSamples = Round[2 (mwaves`Lobs/mwaves`\[Lambda])]; Null, 
+          mwaves`numSamples = OptionValue["numSamples"]; Null]; 
+        mwaves`apertureSamples = mwaves`numSamples; mwaves`Lap = mwaves`Lobs; 
+        mwaves`k = 2. (Pi/mwaves`\[Lambda]); 
+        mwaves`\[CapitalDelta]\[Zeta] = mwaves`Lap/mwaves`apertureSamples; 
+        mwaves`\[CapitalDelta]\[Eta] = mwaves`\[CapitalDelta]\[Zeta]; 
+        mwaves`g = Compile[{{mwaves`x, 
+             Blank[Real]}, {mwaves`y, 
+             Blank[Real]}}, (
+            E^(I mwaves`k Sqrt[mwaves`x^2 + mwaves`y^2 + mwaves`z^2]) 
+            mwaves`z ((-I) mwaves`k + 
+             1/Sqrt[mwaves`x^2 + mwaves`y^2 + mwaves`z^2]))/(2. 
+           Pi (mwaves`x^2 + mwaves`y^2 + mwaves`z^2))]; 
+        mwaves`gr = Compile[{{mwaves`r, 
+             Blank[Real]}}, (mwaves`z/(2. 
+            Pi)) ((E^(I mwaves`k mwaves`r) ((-I) mwaves`k + 1./mwaves`r))/
+            mwaves`r^2)]; mwaves`\[Zeta] = N[
+           
+           Range[(-mwaves`Lap)/2, mwaves`Lap/2, mwaves`Lap/(
+            mwaves`apertureSamples - 1)]]; mwaves`\[Eta] = N[
+           
+           Range[(-mwaves`Lap)/2, mwaves`Lap/2, mwaves`Lap/(
+            mwaves`apertureSamples - 1)]]; mwaves`x = N[
+           
+           Range[(-mwaves`Lobs)/2, mwaves`Lobs/2, mwaves`Lobs/(
+            mwaves`numSamples - 1)]]; mwaves`y = N[
+           
+           Range[(-mwaves`Lobs)/2, mwaves`Lobs/2, mwaves`Lobs/(
+            mwaves`numSamples - 1)]]; 
+        mwaves`coordArray = Outer[List, mwaves`\[Zeta], mwaves`\[Eta]]; 
+        mwaves`U = 
+         Map[Apply[mwaves`apertureFunction, #]& , mwaves`coordArray, {2}]; 
+        mwaves`U = 
+         PadRight[
+          mwaves`U, {
+           2 mwaves`apertureSamples - 1, 2 mwaves`apertureSamples - 1}]; 
+        mwaves`Hx1 = ConstantArray[
+           Part[mwaves`x, 1], {
+           mwaves`apertureSamples - 1, 2 mwaves`apertureSamples - 1}]; 
+        mwaves`Hx2 = Transpose[
+           ConstantArray[mwaves`x, 2 mwaves`apertureSamples - 1]]; 
+        mwaves`Hx = ArrayFlatten[{{mwaves`Hx1}, {mwaves`Hx2}}]; 
+        mwaves`H\[Zeta]2 = ConstantArray[
+           Part[mwaves`\[Zeta], 1], {
+           mwaves`apertureSamples - 1, 2 mwaves`apertureSamples - 1}]; 
+        mwaves`H\[Zeta]1 = Transpose[
+           ConstantArray[
+            Reverse[mwaves`\[Zeta]], 2 mwaves`apertureSamples - 1]]; 
+        mwaves`H\[Zeta] = 
+         ArrayFlatten[{{mwaves`H\[Zeta]1}, {mwaves`H\[Zeta]2}}]; 
+        mwaves`Hx\[Zeta] = mwaves`Hx - mwaves`H\[Zeta]; 
+        mwaves`Hy1 = ConstantArray[
+           Part[mwaves`y, 1], {
+           mwaves`apertureSamples - 1, 2 mwaves`apertureSamples - 1}]; 
+        mwaves`Hy2 = Transpose[
+           ConstantArray[mwaves`y, 2 mwaves`apertureSamples - 1]]; 
+        mwaves`Hy = Transpose[
+           ArrayFlatten[{{mwaves`Hy1}, {mwaves`Hy2}}]]; 
+        mwaves`H\[Eta]2 = ConstantArray[
+           Part[mwaves`\[Eta], 1], {
+           mwaves`apertureSamples - 1, 2 mwaves`apertureSamples - 1}]; 
+        mwaves`H\[Eta]1 = Transpose[
+           ConstantArray[
+            Reverse[mwaves`\[Eta]], 2 mwaves`apertureSamples - 1]]; 
+        mwaves`H\[Eta] = Transpose[
+           ArrayFlatten[{{mwaves`H\[Eta]1}, {mwaves`H\[Eta]2}}]]; 
+        mwaves`Hy\[Eta] = mwaves`Hy - mwaves`H\[Eta]; 
+        mwaves`x\[Zeta]y\[Eta]coordArray = {
+          mwaves`Hx\[Zeta], mwaves`Hy\[Eta]}; 
+        mwaves`x\[Zeta]y\[Eta]coordArray = 
+         Transpose[mwaves`x\[Zeta]y\[Eta]coordArray, {3, 1, 2}]; 
+        ClearAll[
+         mwaves`Hx1, mwaves`Hx2, mwaves`Hx, mwaves`H\[Zeta]1, 
+          mwaves`H\[Zeta]2, mwaves`H\[Zeta]1, mwaves`Hx\[Zeta], mwaves`Hy1, 
+          mwaves`Hy2, mwaves`Hy, mwaves`H\[Eta]1, mwaves`H\[Eta]2, 
+          mwaves`H\[Eta], mwaves`Hy\[Eta]]; 
+        mwaves`rFun = Compile[{{mwaves`x, 
+             Blank[Real]}, {mwaves`y, 
+             Blank[Real]}}, 
+           Sqrt[mwaves`x^2 + mwaves`y^2 + mwaves`z^2]]; 
+        mwaves`rEva = 
+         Map[Apply[mwaves`rFun, #]& , mwaves`x\[Zeta]y\[Eta]coordArray, {2}]; 
+        mwaves`H = Map[mwaves`gr, mwaves`rEva, {2}]; 
+        mwaves`FFU = Fourier[mwaves`U]; mwaves`FFH = Fourier[mwaves`H]; 
+        mwaves`FFUH = mwaves`FFU mwaves`FFH; 
+        mwaves`S = InverseFourier[mwaves`FFUH]; 
+        mwaves`field = 
+         mwaves`\[CapitalDelta]\[Eta] mwaves`\[CapitalDelta]\[Zeta] 
+          Part[mwaves`S, 
+            Span[mwaves`apertureSamples, All], 
+            Span[mwaves`apertureSamples, All]]; 
+        mwaves`field = Transpose[mwaves`field]; 
+        Return[{mwaves`numSamples, mwaves`x, mwaves`y, mwaves`field}]; 
+        Null)}], "SubValues" -> None, "DefaultValues" -> None, "NValues" -> 
+    None, "FormatValues" -> None, "Options" -> {"numSamples" -> Automatic}, 
+    "Attributes" -> {}, "FullName" -> "mwaves`ScalarFieldProp"|>, 
+   False]]], "Output",
+ CellChangeTimes->{
+  3.897058194873527*^9, {3.897127702873622*^9, 3.897127748928344*^9}},
+ CellLabel->"Out[13]=",ExpressionUUID->"03ab4943-5f18-4bff-99a5-05b825ed9dd5"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "A", " ", "plane", " ", "wave", " ", "incident", " ", "on", " ", "a", " ", 
+    "double", " ", "slit"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"\[Lambda]", "=", "1.0"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"slitSep", ",", "slitWidth", ",", "slitLen"}], "}"}], "=", 
+     RowBox[{"{", 
+      RowBox[{"3", ",", "1", ",", "4"}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"doubleSlit", "=", 
+     RowBox[{"Compile", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{"And", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"Abs", "[", 
+               RowBox[{"x", "-", 
+                RowBox[{"slitSep", "/", "2"}]}], "]"}], "<", 
+              RowBox[{"slitWidth", "/", "2"}]}], ",", 
+             RowBox[{
+              RowBox[{"Abs", "[", "y", "]"}], "<", 
+              RowBox[{"slitLen", "/", "2"}]}]}], "]"}], ",", "1.", ",", 
+           "0."}], "]"}], "+", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{"And", "[", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"Abs", "[", 
+               RowBox[{"x", "+", 
+                RowBox[{"slitSep", "/", "2"}]}], "]"}], "<", 
+              RowBox[{"slitWidth", "/", "2"}]}], ",", 
+             RowBox[{
+              RowBox[{"Abs", "[", "y", "]"}], "<", 
+              RowBox[{"slitLen", "/", "2"}]}]}], "]"}], ",", "1.", ",", 
+           "0."}], "]"}]}], ")"}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"Manipulate", "[", 
+    RowBox[{
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"numSamples", ",", "x", ",", "y", ",", "field"}], "}"}], "=", 
+        RowBox[{"ScalarFieldProp", "[", 
+         RowBox[{"Lobs", ",", "z", ",", "doubleSlit", ",", "\[Lambda]"}], 
+         "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"Image", "[", 
+         RowBox[{"Abs", "[", "field", "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"ImageResize", "[", 
+         RowBox[{"field", ",", 
+          RowBox[{"2", "*", "numSamples"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"ImageData", "[", "field", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"ArrayPlot", "[", 
+        RowBox[{"field", ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameTicks", "->", "Automatic"}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"DataReversed", "->", "True"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"ColorFunction", "\[Rule]", 
+          RowBox[{"GetColorMap", "[", "\"\<watermelon\>\"", "]"}]}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"ImageSize", "->", "800"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameStyle", "->", 
+          RowBox[{"Directive", "[", "15", "]"}]}], ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameLabel", "->", 
+          RowBox[{"{", 
+           RowBox[{"\"\<x/\[Mu]m\>\"", ",", "\"\<y/\[Mu]m\>\""}], "}"}]}], 
+         ",", "\[IndentingNewLine]", 
+         RowBox[{"PlotLabel", "->", 
+          RowBox[{"\"\<z=\>\"", "<>", 
+           RowBox[{"ToString", "[", "z", "]"}], "<>", "\"\<\[Mu]m\>\""}]}], 
+         ",", "\[IndentingNewLine]", 
+         RowBox[{"DataRange", "->", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+              RowBox[{"Lobs", "/", "2"}]}], "}"}], ",", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+              RowBox[{"Lobs", "/", "2"}]}], "}"}]}], "}"}]}]}], "]"}]}], 
+      "\[IndentingNewLine]", ")"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"z", ",", "50"}], "}"}], ",", "0.1", ",", "1000", ",", 
+       "0.1"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"Lobs", ",", "50"}], "}"}], ",", "10", ",", "200", ",", 
+       "10"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"TrackedSymbols", ":>", 
+      RowBox[{"{", 
+       RowBox[{"z", ",", "Lobs"}], "}"}]}]}], "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.897059262091096*^9, 3.897059323479589*^9}, {
+   3.897059439783258*^9, 3.8970594399818077`*^9}, 3.8971276947993097`*^9, {
+   3.897127741265953*^9, 3.89712774605754*^9}, {3.897127780780265*^9, 
+   3.897127780914714*^9}},
+ CellLabel->"In[31]:=",ExpressionUUID->"f4d09a24-b977-4e47-b4b9-804515b0fe7b"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{mwaves`Lobs$$ = 50, mwaves`z$$ = 76.5, Typeset`show$$ = 
+    True, Typeset`bookmarkList$$ = {}, Typeset`bookmarkMode$$ = "Menu", 
+    Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
+    "\"untitled\"", Typeset`specs$$ = {{{
+       Hold[mwaves`z$$], 50}, 0.1, 1000, 0.1}, {{
+       Hold[mwaves`Lobs$$], 50}, 10, 200, 10}}, Typeset`size$$ = {
+    800., {397., 401.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
+    Typeset`skipInitDone$$ = True}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     1, StandardForm, "Variables" :> {mwaves`Lobs$$ = 50, mwaves`z$$ = 50}, 
+      "ControllerVariables" :> {}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$}, 
+      "Body" :> ({mwaves`numSamples, mwaves`x, mwaves`y, mwaves`field} = 
+        mwaves`ScalarFieldProp[
+         mwaves`Lobs$$, mwaves`z$$, $CellContext`doubleSlit, 
+          mwaves`\[Lambda]]; mwaves`field = Image[
+          Abs[mwaves`field]]; 
+       mwaves`field = ImageResize[mwaves`field, 2 mwaves`numSamples]; 
+       mwaves`field = ImageData[mwaves`field]; 
+       ArrayPlot[
+        mwaves`field, FrameTicks -> Automatic, DataReversed -> True, 
+         ColorFunction -> mwaves`GetColorMap["watermelon"], ImageSize -> 800, 
+         FrameStyle -> Directive[15], FrameLabel -> {"x/\[Mu]m", "y/\[Mu]m"}, 
+         PlotLabel -> "z=" <> ToString[mwaves`z$$] <> "\[Mu]m", 
+         DataRange -> {{(-mwaves`Lobs$$)/2, mwaves`Lobs$$/
+            2}, {(-mwaves`Lobs$$)/2, mwaves`Lobs$$/2}}]), 
+      "Specifications" :> {{{mwaves`z$$, 50}, 0.1, 1000, 0.1}, {{
+         mwaves`Lobs$$, 50}, 10, 200, 10}}, 
+      "Options" :> {TrackedSymbols :> {mwaves`z$$, mwaves`Lobs$$}}, 
+      "DefaultOptions" :> {}],
+     ImageSizeCache->{844., {456., 461.}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UndoTrackedVariables:>{Typeset`show$$, Typeset`bookmarkMode$$},
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{{3.8971277312777777`*^9, 3.897127781511991*^9}},
+ CellLabel->"Out[34]=",ExpressionUUID->"69cda8b6-9cdf-45dc-bb5b-8f4b13857bf7"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "A", " ", "plane", " ", "wave", " ", "incident", " ", "on", " ", "five", 
+    " ", "circular", " ", "holes"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"\[Lambda]", "=", "1.0"}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"fiveHoly", "=", 
+     RowBox[{"Compile", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             SuperscriptBox["x", "2"], "+", 
+             SuperscriptBox["y", "2"]}], "<=", 
+            SuperscriptBox["3", "2"]}], ",", "1.", ",", "0."}], "]"}], 
+         "\[IndentingNewLine]", "+", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"x", "-", "10"}], ")"}], "2"], "+", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"y", "-", "10"}], ")"}], "2"]}], "<=", 
+            SuperscriptBox["3", "2"]}], ",", "1.", ",", "0."}], "]"}], 
+         "\[IndentingNewLine]", "+", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"x", "-", "10"}], ")"}], "2"], "+", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"y", "+", "10"}], ")"}], "2"]}], "<=", 
+            SuperscriptBox["3", "2"]}], ",", "1.", ",", "0."}], "]"}], 
+         "\[IndentingNewLine]", "+", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"x", "+", "10"}], ")"}], "2"], "+", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"y", "+", "10"}], ")"}], "2"]}], "<=", 
+            SuperscriptBox["3", "2"]}], ",", "1.", ",", "0."}], "]"}], 
+         "\[IndentingNewLine]", "+", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"x", "+", "10"}], ")"}], "2"], "+", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{"y", "-", "10"}], ")"}], "2"]}], "<=", 
+            SuperscriptBox["3", "2"]}], ",", "1.", ",", "0."}], "]"}]}], 
+        ")"}]}], "]"}]}], ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"Manipulate", "[", 
+    RowBox[{
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"numSamples", ",", "x", ",", "y", ",", "field"}], "}"}], "=", 
+        RowBox[{"ScalarFieldProp", "[", 
+         RowBox[{"Lobs", ",", "z", ",", "fiveHoly", ",", "\[Lambda]"}], 
+         "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"Image", "[", 
+         RowBox[{"Abs", "[", "field", "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"ImageResize", "[", 
+         RowBox[{"field", ",", 
+          RowBox[{"2", "*", "numSamples"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"ImageData", "[", "field", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"ArrayPlot", "[", 
+        RowBox[{"field", ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameTicks", "->", "Automatic"}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"DataReversed", "->", "True"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"ColorFunction", "\[Rule]", 
+          RowBox[{"GetColorMap", "[", "\"\<wildfire\>\"", "]"}]}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"ImageSize", "->", "800"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameStyle", "->", 
+          RowBox[{"Directive", "[", "15", "]"}]}], ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameLabel", "->", 
+          RowBox[{"{", 
+           RowBox[{"\"\<x/\[Mu]m\>\"", ",", "\"\<y/\[Mu]m\>\""}], "}"}]}], 
+         ",", "\[IndentingNewLine]", 
+         RowBox[{"PlotLabel", "->", 
+          RowBox[{"\"\<z=\>\"", "<>", 
+           RowBox[{"ToString", "[", "z", "]"}], "<>", "\"\<\[Mu]m\>\""}]}], 
+         ",", "\[IndentingNewLine]", 
+         RowBox[{"DataRange", "->", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+              RowBox[{"Lobs", "/", "2"}]}], "}"}], ",", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+              RowBox[{"Lobs", "/", "2"}]}], "}"}]}], "}"}]}]}], "]"}]}], 
+      "\[IndentingNewLine]", ")"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"z", ",", "50"}], "}"}], ",", "0.1", ",", "100", ",", "0.1"}],
+       "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"Lobs", ",", "50"}], "}"}], ",", "10", ",", "200", ",", 
+       "10"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"TrackedSymbols", ":>", 
+      RowBox[{"{", 
+       RowBox[{"z", ",", "Lobs", ",", "numSamples"}], "}"}]}]}], 
+    "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.8965432953072453`*^9, 3.896543339444462*^9}, {
+   3.896543441908361*^9, 3.8965434517166023`*^9}, {3.8965436255776873`*^9, 
+   3.896543789342334*^9}, 3.89654381975067*^9, 3.896543995036783*^9, {
+   3.897042550836195*^9, 3.8970425642289057`*^9}, {3.897042847525914*^9, 
+   3.897042882294959*^9}, 3.897042947612763*^9, {3.897043113071013*^9, 
+   3.89704311526703*^9}, {3.897044060579813*^9, 3.8970440899732637`*^9}, 
+   3.89704419620793*^9, {3.897044244459305*^9, 3.897044298678131*^9}, {
+   3.8970443369591618`*^9, 3.89704435119141*^9}, 3.897051241390189*^9, {
+   3.8970514297385073`*^9, 3.897051430312022*^9}, {3.897055922500422*^9, 
+   3.897055925684424*^9}, 3.8970560114383087`*^9, {3.8970564569489803`*^9, 
+   3.897056478422287*^9}, {3.897056518352437*^9, 3.897056599141144*^9}, {
+   3.8970566761709557`*^9, 3.8970566953035316`*^9}, {3.897056810943118*^9, 
+   3.897056816660931*^9}, {3.89705719642702*^9, 3.8970571987668953`*^9}, {
+   3.897057483716621*^9, 3.8970574922405577`*^9}, {3.8970575706880703`*^9, 
+   3.897057598970786*^9}, {3.897057960912771*^9, 3.897057961802335*^9}, {
+   3.897058738116243*^9, 3.8970587559456244`*^9}, {3.897059067096113*^9, 
+   3.8970591289818974`*^9}, {3.897059187612178*^9, 3.897059195474215*^9}, {
+   3.89705933869492*^9, 3.8970593437775383`*^9}, {3.897059389961397*^9, 
+   3.897059421995882*^9}, 3.8971276930876293`*^9, {3.8971277597938623`*^9, 
+   3.897127762472184*^9}},
+ CellLabel->"In[18]:=",ExpressionUUID->"208efc47-f7b0-4069-b0a3-7d98239cfc41"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{mwaves`Lobs$$ = 50, mwaves`z$$ = 50, Typeset`show$$ = 
+    True, Typeset`bookmarkList$$ = {}, Typeset`bookmarkMode$$ = "Menu", 
+    Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
+    "\"untitled\"", Typeset`specs$$ = {{{
+       Hold[mwaves`z$$], 50}, 0.1, 100, 0.1}, {{
+       Hold[mwaves`Lobs$$], 50}, 10, 200, 10}}, Typeset`size$$ = {
+    800., {397., 401.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
+    Typeset`skipInitDone$$ = True}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     1, StandardForm, "Variables" :> {mwaves`Lobs$$ = 50, mwaves`z$$ = 50}, 
+      "ControllerVariables" :> {}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$}, 
+      "Body" :> ({mwaves`numSamples, mwaves`x, mwaves`y, mwaves`field} = 
+        mwaves`ScalarFieldProp[
+         mwaves`Lobs$$, mwaves`z$$, $CellContext`fiveHoly, mwaves`\[Lambda]]; 
+       mwaves`field = Image[
+          Abs[mwaves`field]]; 
+       mwaves`field = ImageResize[mwaves`field, 2 mwaves`numSamples]; 
+       mwaves`field = ImageData[mwaves`field]; 
+       ArrayPlot[
+        mwaves`field, FrameTicks -> Automatic, DataReversed -> True, 
+         ColorFunction -> mwaves`GetColorMap["wildfire"], ImageSize -> 800, 
+         FrameStyle -> Directive[15], FrameLabel -> {"x/\[Mu]m", "y/\[Mu]m"}, 
+         PlotLabel -> "z=" <> ToString[mwaves`z$$] <> "\[Mu]m", 
+         DataRange -> {{(-mwaves`Lobs$$)/2, mwaves`Lobs$$/
+            2}, {(-mwaves`Lobs$$)/2, mwaves`Lobs$$/2}}]), 
+      "Specifications" :> {{{mwaves`z$$, 50}, 0.1, 100, 0.1}, {{
+         mwaves`Lobs$$, 50}, 10, 200, 10}}, 
+      "Options" :> {
+       TrackedSymbols :> {mwaves`z$$, mwaves`Lobs$$, mwaves`numSamples}}, 
+      "DefaultOptions" :> {}],
+     ImageSizeCache->{844., {456., 461.}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UndoTrackedVariables:>{Typeset`show$$, Typeset`bookmarkMode$$},
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{{3.897057528185103*^9, 3.897057531347273*^9}, {
+   3.8970575798878927`*^9, 3.89705759939786*^9}, 3.89705763055301*^9, 
+   3.897057962538822*^9, 3.8970581210844812`*^9, 3.897058347923092*^9, {
+   3.897058725100874*^9, 3.897058756361513*^9}, 3.897059013304495*^9, 
+   3.8970590587091618`*^9, {3.897059106182693*^9, 3.8970591292283583`*^9}, {
+   3.897059174134387*^9, 3.897059195739175*^9}, 3.897059305100307*^9, 
+   3.8970593440399446`*^9, {3.897059375569902*^9, 3.8970594246735687`*^9}, 
+   3.897127454154817*^9, 3.89712776471817*^9},
+ CellLabel->"Out[20]=",ExpressionUUID->"0cbe2abd-7b14-42b4-aa36-d65a2caedc92"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "Superposition", " ", "of", " ", "five", " ", "plane", " ", "waves", " ", 
+    "propagating", " ", "in", " ", "different", " ", "directions"}], "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"\[Lambda]", "=", "1.0"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"k", "=", 
+     RowBox[{"2", "*", 
+      FractionBox["\[Pi]", "\[Lambda]"]}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Lobs", "=", "20"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"kdir1", "=", 
+     RowBox[{"k", "*", 
+      RowBox[{"{", 
+       RowBox[{
+        FractionBox["1", 
+         SqrtBox["3"]], ",", 
+        FractionBox["1", 
+         SqrtBox["3"]], ",", 
+        FractionBox["1", 
+         SqrtBox["3"]]}], "}"}]}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"kdir2", "=", 
+     RowBox[{"k", "*", 
+      RowBox[{"{", 
+       RowBox[{
+        FractionBox["1", 
+         SqrtBox["3"]], ",", 
+        FractionBox[
+         RowBox[{"-", "1"}], 
+         SqrtBox["3"]], ",", 
+        FractionBox["1", 
+         SqrtBox["3"]]}], "}"}]}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"kdir3", "=", 
+     RowBox[{"k", "*", 
+      RowBox[{"{", 
+       RowBox[{
+        FractionBox[
+         RowBox[{"-", "1"}], 
+         SqrtBox["3"]], ",", 
+        FractionBox[
+         RowBox[{"-", "1"}], 
+         SqrtBox["3"]], ",", 
+        FractionBox["1", 
+         SqrtBox["3"]]}], "}"}]}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"kdir4", "=", 
+     RowBox[{"k", "*", 
+      RowBox[{"{", 
+       RowBox[{
+        FractionBox[
+         RowBox[{"-", "1"}], 
+         SqrtBox["3"]], ",", 
+        FractionBox["1", 
+         SqrtBox["3"]], ",", 
+        FractionBox["1", 
+         SqrtBox["3"]]}], "}"}]}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"kdir0", "=", 
+     RowBox[{"k", "*", 
+      RowBox[{"{", 
+       RowBox[{"0", ",", "0", ",", "1"}], "}"}]}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"fiveWays", "=", 
+     RowBox[{"Compile", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{"Abs", "[", "x", "]"}], "+", 
+            RowBox[{"Abs", "[", "y", "]"}]}], "<=", "3"}], ",", 
+          RowBox[{
+           RowBox[{"Exp", "[", 
+            RowBox[{"I", " ", 
+             RowBox[{"kdir1", ".", 
+              RowBox[{"{", 
+               RowBox[{"x", ",", "y", ",", "0"}], "}"}]}]}], "]"}], "+", 
+           RowBox[{"Exp", "[", 
+            RowBox[{"I", " ", 
+             RowBox[{"kdir2", ".", 
+              RowBox[{"{", 
+               RowBox[{"x", ",", "y", ",", "0"}], "}"}]}]}], "]"}], "+", 
+           RowBox[{"Exp", "[", 
+            RowBox[{"I", " ", 
+             RowBox[{"kdir3", ".", 
+              RowBox[{"{", 
+               RowBox[{"x", ",", "y", ",", "0"}], "}"}]}]}], "]"}], "+", 
+           RowBox[{"Exp", "[", 
+            RowBox[{"I", " ", 
+             RowBox[{"kdir4", ".", 
+              RowBox[{"{", 
+               RowBox[{"x", ",", "y", ",", "0"}], "}"}]}]}], "]"}], "+", 
+           RowBox[{"Exp", "[", 
+            RowBox[{"I", " ", 
+             RowBox[{"kdir0", ".", 
+              RowBox[{"{", 
+               RowBox[{"x", ",", "y", ",", "0"}], "}"}]}]}], "]"}]}], ",", 
+          "0."}], "]"}], ")"}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"Manipulate", "[", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"numSamples", ",", "x", ",", "y", ",", "field"}], "}"}], "=", 
+        RowBox[{"ScalarFieldProp", "[", 
+         RowBox[{"Lobs", ",", "z", ",", "fiveWays", ",", "\[Lambda]"}], 
+         "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"Image", "[", 
+         RowBox[{"Abs", "[", "field", "]"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"ImageResize", "[", 
+         RowBox[{"field", ",", 
+          RowBox[{"5", "*", "numSamples"}]}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"field", "=", 
+        RowBox[{"ImageData", "[", "field", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"ArrayPlot", "[", 
+        RowBox[{"field", ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameTicks", "->", "Automatic"}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"DataReversed", "->", "True"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"ColorFunction", "\[Rule]", 
+          RowBox[{"GetColorMap", "[", "\"\<toxic\>\"", "]"}]}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"FrameStyle", "->", 
+          RowBox[{"Directive", "[", "15", "]"}]}], ",", "\[IndentingNewLine]", 
+         RowBox[{"FrameLabel", "->", 
+          RowBox[{"{", 
+           RowBox[{"\"\<x/\[Mu]m\>\"", ",", "\"\<y/\[Mu]m\>\""}], "}"}]}], 
+         ",", "\[IndentingNewLine]", 
+         RowBox[{"PlotLabel", "->", 
+          RowBox[{"\"\<z=\>\"", "<>", 
+           RowBox[{"ToString", "[", "z", "]"}], "<>", "\"\<\[Mu]m\>\""}]}], 
+         ",", "\[IndentingNewLine]", 
+         RowBox[{"ImageSize", "->", "800"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"DataRange", "->", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+              RowBox[{"Lobs", "/", "2"}]}], "}"}], ",", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+              RowBox[{"Lobs", "/", "2"}]}], "}"}]}], "}"}]}]}], "]"}]}], 
+      "\[IndentingNewLine]", ")"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"z", ",", "10"}], "}"}], ",", "0.1", ",", "20", ",", "0.1"}], 
+      "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"TrackedSymbols", ":>", 
+      RowBox[{"{", "z", "}"}]}]}], "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.897051292782049*^9, 3.897051293228652*^9}, {
+   3.897051353273929*^9, 3.897051399987686*^9}, {3.897051454904755*^9, 
+   3.897051521965684*^9}, {3.897051653302021*^9, 3.8970516591887827`*^9}, 
+   3.897051698244372*^9, {3.8970559474671097`*^9, 3.897055982919262*^9}, {
+   3.8970578044983473`*^9, 3.897057875293599*^9}, {3.89705801412556*^9, 
+   3.897058053956893*^9}, {3.897058380073429*^9, 3.897058382132639*^9}, {
+   3.897058444817061*^9, 3.897058446195798*^9}, {3.8970585371379128`*^9, 
+   3.897058619772278*^9}, {3.897058676581008*^9, 3.8970586949219303`*^9}, {
+   3.897059044689005*^9, 3.897059056088194*^9}, {3.8970591661608543`*^9, 
+   3.897059170814624*^9}, {3.8970593551874933`*^9, 3.8970593723231173`*^9}, {
+   3.897127525967716*^9, 3.897127529301463*^9}, {3.897127643184472*^9, 
+   3.897127643328421*^9}, {3.897127685863439*^9, 3.8971276868278*^9}, 
+   3.897127768537718*^9},
+ CellLabel->"In[21]:=",ExpressionUUID->"b67d11f6-c29f-4f2f-a8fc-9a0d04feace5"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{mwaves`z$$ = 10, Typeset`show$$ = True, 
+    Typeset`bookmarkList$$ = {}, Typeset`bookmarkMode$$ = "Menu", 
+    Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
+    "\"untitled\"", Typeset`specs$$ = {{{
+       Hold[mwaves`z$$], 10}, 0.1, 20, 0.1}}, Typeset`size$$ = {
+    800., {397., 401.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
+    Typeset`skipInitDone$$ = True}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     1, StandardForm, "Variables" :> {mwaves`z$$ = 10}, 
+      "ControllerVariables" :> {}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$}, 
+      "Body" :> ({mwaves`numSamples, mwaves`x, mwaves`y, mwaves`field} = 
+        mwaves`ScalarFieldProp[
+         mwaves`Lobs, mwaves`z$$, $CellContext`fiveWays, mwaves`\[Lambda]]; 
+       mwaves`field = Image[
+          Abs[mwaves`field]]; 
+       mwaves`field = ImageResize[mwaves`field, 5 mwaves`numSamples]; 
+       mwaves`field = ImageData[mwaves`field]; 
+       ArrayPlot[
+        mwaves`field, FrameTicks -> Automatic, DataReversed -> True, 
+         ColorFunction -> mwaves`GetColorMap["toxic"], FrameStyle -> 
+         Directive[15], FrameLabel -> {"x/\[Mu]m", "y/\[Mu]m"}, PlotLabel -> 
+         "z=" <> ToString[mwaves`z$$] <> "\[Mu]m", ImageSize -> 800, 
+         DataRange -> {{(-mwaves`Lobs)/2, mwaves`Lobs/2}, {(-mwaves`Lobs)/2, 
+            mwaves`Lobs/2}}]), 
+      "Specifications" :> {{{mwaves`z$$, 10}, 0.1, 20, 0.1}}, 
+      "Options" :> {TrackedSymbols :> {mwaves`z$$}}, "DefaultOptions" :> {}],
+     ImageSizeCache->{844., {442., 447.}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UndoTrackedVariables:>{Typeset`show$$, Typeset`bookmarkMode$$},
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{
+  3.897058109535054*^9, 3.897058351843409*^9, 3.897058382460041*^9, {
+   3.897058555001728*^9, 3.897058620193288*^9}, 3.8970586955691338`*^9, 
+   3.8970590194809637`*^9, {3.897059157484867*^9, 3.897059171144429*^9}, 
+   3.897059307649198*^9, {3.8970593601654654`*^9, 3.897059372599115*^9}, 
+   3.897127504994007*^9, 3.897127644243347*^9, 3.8971277691779623`*^9},
+ CellLabel->"Out[30]=",ExpressionUUID->"c8acbbb5-aa24-4ddf-bdd2-a92c692c60a4"]
+}, Open  ]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["VectorFieldProp", "Section",
+ CellChangeTimes->{{3.896463919585335*^9, 3.896463928598584*^9}, {
+   3.897052600958274*^9, 3.8970526370544577`*^9}, {3.897058185646338*^9, 
+   3.8970581874249287`*^9}, 3.8971276991812572`*^9, {3.897127927875984*^9, 
+   3.897127928550337*^9}},ExpressionUUID->"87de81bb-dedd-41d7-a58d-\
+a318b40d49d2"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"?", "VectorFieldProp"}]], "Input",
+ CellChangeTimes->{{3.8970581906854687`*^9, 3.897058194528695*^9}, 
+   3.8971276983596582`*^9, 3.897127748568653*^9, {3.8971279345357943`*^9, 
+   3.897127936723879*^9}},
+ CellLabel->"In[35]:=",ExpressionUUID->"7d377927-e85c-4837-bbd7-4961582495b5"],
+
+Cell[BoxData[
+ InterpretationBox[
+  StyleBox[
+   FrameBox[
+    DynamicModuleBox[{System`InformationDump`open$$ = False, 
+     System`InformationDump`mouseOver$$ = False}, 
+     PaneSelectorBox[{True->
+      TagBox[GridBox[{
+         {
+          ItemBox[
+           PaneBox[
+            StyleBox["\<\" Symbol\"\>", "InformationTitleText",
+             StripOnInput->False,
+             BaseStyle -> None],
+            FrameMargins->{{4, 0}, {-1, 1}}],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False]},
+         {
+          ItemBox[
+           PaneBox[
+            
+            StyleBox["\<\"VectorFieldProp the three cartesian components of a \
+field in an aperture plane and propagates them to an observation plane by \
+using an implementation of the direct integration of the Rayleigh-Sommerfeld \
+diffraction integral. This implementation is based on the method described in \
+Shen and Wang (2006). The field is sampled in the aperture plane using a \
+uniform grid, and the observation plane is also sampled using a uniform grid. \
+The field is assumed to be zero outside of the aperture plane. Contrary to \
+the Fresnel or Kirchhoff integrals, the Rayleigh-Sommerfeld integral does not \
+require the use of the paraxial approximation, and is therefore valid for \
+arbitrary distances between the aperture plane and the observation plane. \
+Here these two planes are assumed to be \
+parallel.\\n\\nParameters\\n----------\\n+ Lobs (float): spatial width of the \
+obsevation region, in \[Mu]m. The observation region is assumed to be a \
+squared centered on (x,y) = (0,0), and extending from -Lobs/2 to Lobs/2 in \
+both the x and y directions.\\n+ z (float): distance between the aperture \
+plane and the observation plane, given in \[Mu]m. The aperture plane is \
+assumed to be at z=0.\\n+ {apertureFunctionx, apertureFunctiony, \
+apertureFunctionz} (List with three functions): a list with three \
+two-variable functions which return the complex amplitude of the field in the \
+aperture plane. Input to the functions is assumed to be in cartesian \
+coordinates x,y. No attempt is made to make sure that these are valid \
+electromagnetic fields.\\n+ \[Lambda]free (float): wavelength in vaccum of \
+field, given in \[Mu]m.\\n+ nref  (float): refractive index of the \
+propagating medium.\\n\\nOptions\\n-------\\n+ \\\"numSamples\\\" (int or \
+Automatic): number of samples to use in the aperture plane and the \
+observation plane. The aperture plane is sampled using a uniform grid, and \
+the observation plane is also sampled using a uniform grid. The default is \
+Automatic in which case numSamples is calculated so that the sample size is \
+equal to half the wavelength of the wave inside of the propagating medium.\\n\
+\\nReturns\\n-------\\n{numSamples, xCoords, yCoords, {fieldx, fieldy, \
+fieldz}}\\n+ xCoords (List): x coordinates of the observation plane, given in \
+\[Mu]m.\\n+ yCoords (List): y coordinates of the observation plane, given in \
+\[Mu]m.\\n+ {fieldx, fieldy, fieldz}   (List of lists): each of the given \
+lists are 2-dimensional lists which contain the complex amplitude of the \
+cooresponding component of the field in the observation plane. The top left \
+corner of each list corresponds to the lower left corner of the observation \
+plane. The coordinates associated with each element in the given lists should \
+be taken from xCoords and yCoords.\\n\\nReferences\\n----------\\n+ Shen, \
+Fabin, and Anbo Wang. \\\"Fast-Fourier-transform based numerical integration \
+method for the Rayleigh-Sommerfeld diffraction formula.\\\" Applied optics \
+45, no. 6 (2006): 1102-1110.\\n\\n\"\>", "InformationUsageText",
+             StripOnInput->False,
+             LineSpacing->{1.5, 1.5, 3.}],
+            FrameMargins->{{10, 10}, {8, 10}}],
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False]},
+         {
+          PaneBox[
+           TagBox[GridBox[{
+              {
+               StyleBox[
+                TagBox[
+                 TooltipBox[
+                  StyleBox["\<\" Definitions\"\>", "InformationRowLabel",
+                   StripOnInput->False],
+                  "\"Definitions\"",
+                  TooltipStyle->"TextStyling"],
+                 Annotation[#, "Definitions", "Tooltip"]& ], "DialogStyle",
+                StripOnInput->False]},
+              {
+               TemplateBox[{"\"\[ThinSpace]\"", 
+                 GridBox[{{
+                    RowBox[{
+                    RowBox[{"VectorFieldProp", "[", 
+                    RowBox[{"Lobs_", ",", "z_", ",", 
+                    RowBox[{"{", 
+                    
+                    RowBox[{"apertureFunctionx_", ",", "apertureFunctiony_", 
+                    ",", "apertureFunctionz_"}], "}"}], ",", "\[Lambda]free_",
+                     ",", 
+                    RowBox[{"nref_", ":", "1"}], ",", 
+                    RowBox[{"OptionsPattern", "[", "]"}]}], "]"}], ":=", 
+                    RowBox[{"(", 
+                    RowBox[{
+                    RowBox[{
+                    RowBox[{"{", 
+                    
+                    RowBox[{"numSamplesx", ",", "xx", ",", "yx", ",", 
+                    "fieldx"}], "}"}], "=", 
+                    RowBox[{"ScalarFieldProp", "[", 
+                    
+                    RowBox[{"Lobs", ",", "z", ",", "apertureFunctionx", ",", 
+                    "\[Lambda]free", ",", "nref", ",", 
+                    RowBox[{"\"numSamples\"", "\[Rule]", 
+                    RowBox[{"OptionValue", "[", "\"numSamples\"", "]"}]}]}], 
+                    "]"}]}], ";", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    
+                    RowBox[{"numSamplesy", ",", "xy", ",", "yy", ",", 
+                    "fieldy"}], "}"}], "=", 
+                    RowBox[{"ScalarFieldProp", "[", 
+                    
+                    RowBox[{"Lobs", ",", "z", ",", "apertureFunctiony", ",", 
+                    "\[Lambda]free", ",", "nref", ",", 
+                    RowBox[{"\"numSamples\"", "\[Rule]", 
+                    RowBox[{"OptionValue", "[", "\"numSamples\"", "]"}]}]}], 
+                    "]"}]}], ";", 
+                    RowBox[{
+                    RowBox[{"{", 
+                    
+                    RowBox[{"numSamplesz", ",", "xz", ",", "yz", ",", 
+                    "fieldz"}], "}"}], "=", 
+                    RowBox[{"ScalarFieldProp", "[", 
+                    
+                    RowBox[{"Lobs", ",", "z", ",", "apertureFunctionz", ",", 
+                    "\[Lambda]free", ",", "nref", ",", 
+                    RowBox[{"\"numSamples\"", "\[Rule]", 
+                    RowBox[{"OptionValue", "[", "\"numSamples\"", "]"}]}]}], 
+                    "]"}]}], ";", 
+                    RowBox[{"Return", "[", 
+                    RowBox[{"{", 
+                    RowBox[{"numSsamplesx", ",", "xx", ",", "yx", ",", 
+                    RowBox[{"{", 
+                    RowBox[{"fieldx", ",", "fieldy", ",", "fieldz"}], "}"}]}],
+                     "}"}], "]"}], ";"}], ")"}]}]}, {" "}}, 
+                  GridBoxAlignment -> {"Columns" -> {{Left}}}, 
+                  DefaultBaseStyle -> "Column", 
+                  GridBoxItemSize -> {
+                   "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}]},
+                "RowDefault"]}
+             },
+             DefaultBaseStyle->"Column",
+             GridBoxAlignment->{"Columns" -> {{Left}}},
+             
+             GridBoxItemSize->{
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+            "Column"],
+           FrameMargins->{{6, 0}, {3, 6}}], "\<\"\"\>"},
+         {
+          PaneBox[GridBox[{
+             {
+              
+              DynamicModuleBox[{System`InformationDump`open$$ = {
+               False, False, False, False, False, False}}, 
+               StyleBox[GridBox[{
+                  {
+                   TagBox[
+                    TooltipBox[
+                    StyleBox["\<\" Options\"\>", "InformationRowLabel",
+                    StripOnInput->False],
+                    "\"Options\"",
+                    TooltipStyle->"TextStyling"],
+                    Annotation[#, "Options", "Tooltip"]& ], 
+                   RowBox[{"\<\"numSamples\"\>", "\[Rule]", "Automatic"}]},
+                  {
+                   TagBox[
+                    TooltipBox[
+                    StyleBox["\<\" Full Name\"\>", "InformationRowLabel",
+                    StripOnInput->False],
+                    "\"FullName\"",
+                    TooltipStyle->"TextStyling"],
+                    
+                    Annotation[#, "FullName", 
+                    "Tooltip"]& ], "\<\"mwaves`VectorFieldProp\"\>"}
+                 },
+                 AutoDelete->False,
+                 GridBoxAlignment->{"Columns" -> {Right, Left}},
+                 GridBoxDividers->None,
+                 GridBoxItemSize->{"Columns" -> {Automatic, Automatic}},
+                 GridBoxSpacings->{"Columns" -> {
+                    Offset[0.27999999999999997`], {
+                    Offset[0.5599999999999999]}, 
+                    Offset[0.27999999999999997`]}, "Rows" -> {
+                    Offset[0.2], {
+                    Offset[0.8]}, 
+                    Offset[0.2]}}], "DialogStyle",
+                StripOnInput->False],
+               DynamicModuleValues:>{}]}
+            },
+            DefaultBaseStyle->"Column",
+            GridBoxAlignment->{"Columns" -> {{Left}}},
+            GridBoxDividers->{"Columns" -> {{False}}, "Rows" -> {{False}}},
+            
+            GridBoxItemSize->{
+             "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}},
+            GridBoxSpacings->{"Columns" -> {
+                Offset[0.27999999999999997`], {
+                 Offset[0.5599999999999999]}, 
+                Offset[0.27999999999999997`]}, "Rows" -> {
+                Offset[0.2], {
+                 Offset[3.6]}, 
+                Offset[0.2]}}],
+           FrameMargins->{{6, 6}, {6, 3}}], ""},
+         {
+          ItemBox[
+           TagBox[
+            ButtonBox[
+             PaneSelectorBox[{False->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "UpPointerOpener"]], True->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "UpPointerOpenerHot"]]}, Dynamic[
+              System`InformationDump`mouseOver$$]],
+             Alignment->Left,
+             Appearance->{"Default" -> None},
+             
+             ButtonFunction:>FEPrivate`Set[
+              System`InformationDump`open$$, False],
+             Evaluator->Automatic,
+             FrameMargins->{{9, 0}, {0, 0}},
+             ImageMargins->0,
+             ImageSize->Full,
+             Method->"Preemptive"],
+            
+            EventHandlerTag[{
+             "MouseEntered" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, True], 
+              "MouseExited" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, False], 
+              Method -> "Preemptive", PassEventsDown -> Automatic, 
+              PassEventsUp -> True}]],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], "\[SpanFromLeft]"}
+        },
+        AutoDelete->False,
+        FrameStyle->Directive[
+          GrayLevel[0.8], 
+          Thickness[Tiny]],
+        GridBoxAlignment->{"Columns" -> {Left, Right}, "Rows" -> {{Center}}},
+        GridBoxDividers->{
+         "Columns" -> {{None}}, "Rows" -> {False, {True}, False}},
+        GridBoxItemSize->{
+         "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+       "Grid"], False->
+      TagBox[GridBox[{
+         {
+          ItemBox[
+           PaneBox[
+            StyleBox["\<\" Symbol\"\>", "InformationTitleText",
+             StripOnInput->False],
+            FrameMargins->{{4, 0}, {-1, 1}}],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False]},
+         {
+          ItemBox[
+           PaneBox[
+            
+            StyleBox["\<\"VectorFieldProp the three cartesian components of a \
+field in an aperture plane and propagates them to an observation plane by \
+using an implementation of the direct integration of the Rayleigh-Sommerfeld \
+diffraction integral. This implementation is based on the method described in \
+Shen and Wang (2006). The field is sampled in the aperture plane using a \
+uniform grid, and the observation plane is also sampled using a uniform grid. \
+The field is assumed to be zero outside of the aperture plane. Contrary to \
+the Fresnel or Kirchhoff integrals, the Rayleigh-Sommerfeld integral does not \
+require the use of the paraxial approximation, and is therefore valid for \
+arbitrary distances between the aperture plane and the observation plane. \
+Here these two planes are assumed to be \
+parallel.\\n\\nParameters\\n----------\\n+ Lobs (float): spatial width of the \
+obsevation region, in \[Mu]m. The observation region is assumed to be a \
+squared centered on (x,y) = (0,0), and extending from -Lobs/2 to Lobs/2 in \
+both the x and y directions.\\n+ z (float): distance between the aperture \
+plane and the observation plane, given in \[Mu]m. The aperture plane is \
+assumed to be at z=0.\\n+ {apertureFunctionx, apertureFunctiony, \
+apertureFunctionz} (List with three functions): a list with three \
+two-variable functions which return the complex amplitude of the field in the \
+aperture plane. Input to the functions is assumed to be in cartesian \
+coordinates x,y. No attempt is made to make sure that these are valid \
+electromagnetic fields.\\n+ \[Lambda]free (float): wavelength in vaccum of \
+field, given in \[Mu]m.\\n+ nref  (float): refractive index of the \
+propagating medium.\\n\\nOptions\\n-------\\n+ \\\"numSamples\\\" (int or \
+Automatic): number of samples to use in the aperture plane and the \
+observation plane. The aperture plane is sampled using a uniform grid, and \
+the observation plane is also sampled using a uniform grid. The default is \
+Automatic in which case numSamples is calculated so that the sample size is \
+equal to half the wavelength of the wave inside of the propagating medium.\\n\
+\\nReturns\\n-------\\n{numSamples, xCoords, yCoords, {fieldx, fieldy, \
+fieldz}}\\n+ xCoords (List): x coordinates of the observation plane, given in \
+\[Mu]m.\\n+ yCoords (List): y coordinates of the observation plane, given in \
+\[Mu]m.\\n+ {fieldx, fieldy, fieldz}   (List of lists): each of the given \
+lists are 2-dimensional lists which contain the complex amplitude of the \
+cooresponding component of the field in the observation plane. The top left \
+corner of each list corresponds to the lower left corner of the observation \
+plane. The coordinates associated with each element in the given lists should \
+be taken from xCoords and yCoords.\\n\\nReferences\\n----------\\n+ Shen, \
+Fabin, and Anbo Wang. \\\"Fast-Fourier-transform based numerical integration \
+method for the Rayleigh-Sommerfeld diffraction formula.\\\" Applied optics \
+45, no. 6 (2006): 1102-1110.\\n\\n\"\>", "InformationUsageText",
+             StripOnInput->False,
+             LineSpacing->{1.5, 1.5, 3.}],
+            FrameMargins->{{10, 10}, {8, 10}}],
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False], 
+          ItemBox["\<\"\"\>",
+           BaseStyle->"InformationUsageSubtitleBackground",
+           StripOnInput->False]},
+         {
+          ItemBox[
+           TagBox[
+            ButtonBox[
+             PaneSelectorBox[{False->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "DownPointerOpener"],
+               ImageSizeCache->{10., {2., 8.}}], True->
+              
+              DynamicBox[FEPrivate`FrontEndResource[
+               "FEBitmaps", "DownPointerOpenerHot"],
+               ImageSizeCache->{10., {2., 8.}}]}, Dynamic[
+              System`InformationDump`mouseOver$$]],
+             Alignment->Left,
+             Appearance->{"Default" -> None},
+             
+             ButtonFunction:>FEPrivate`Set[
+              System`InformationDump`open$$, True],
+             Evaluator->Automatic,
+             FrameMargins->{{9, 0}, {0, 0}},
+             ImageMargins->0,
+             ImageSize->Full,
+             Method->"Preemptive"],
+            
+            EventHandlerTag[{
+             "MouseEntered" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, True], 
+              "MouseExited" :> 
+              FEPrivate`Set[System`InformationDump`mouseOver$$, False], 
+              Method -> "Preemptive", PassEventsDown -> Automatic, 
+              PassEventsUp -> True}]],
+           BaseStyle->"InformationTitleBackground",
+           StripOnInput->False], "\[SpanFromLeft]"}
+        },
+        AutoDelete->False,
+        FrameStyle->Directive[
+          GrayLevel[0.8], 
+          Thickness[Tiny]],
+        GridBoxAlignment->{"Columns" -> {Left, Right}, "Rows" -> {{Center}}},
+        GridBoxDividers->{
+         "Columns" -> {{None}}, "Rows" -> {False, {True}, False}},
+        GridBoxItemSize->{
+         "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}],
+       "Grid"]}, Dynamic[System`InformationDump`open$$],
+      BaselinePosition->Baseline,
+      FrameMargins->0,
+      ImageSize->Automatic],
+     DynamicModuleValues:>{}],
+    BaseStyle->"InformationGridFrame",
+    StripOnInput->False], "InformationGridPlain",
+   StripOnInput->False],
+  InformationData[<|
+   "ObjectType" -> "Symbol", "Usage" -> 
+    "VectorFieldProp the three cartesian components of a field in an aperture \
+plane and propagates them to an observation plane by using an implementation \
+of the direct integration of the Rayleigh-Sommerfeld diffraction integral. \
+This implementation is based on the method described in Shen and Wang (2006). \
+The field is sampled in the aperture plane using a uniform grid, and the \
+observation plane is also sampled using a uniform grid. The field is assumed \
+to be zero outside of the aperture plane. Contrary to the Fresnel or \
+Kirchhoff integrals, the Rayleigh-Sommerfeld integral does not require the \
+use of the paraxial approximation, and is therefore valid for arbitrary \
+distances between the aperture plane and the observation plane. Here these \
+two planes are assumed to be parallel.\n\nParameters\n----------\n+ Lobs \
+(float): spatial width of the obsevation region, in \[Mu]m. The observation \
+region is assumed to be a squared centered on (x,y) = (0,0), and extending \
+from -Lobs/2 to Lobs/2 in both the x and y directions.\n+ z (float): distance \
+between the aperture plane and the observation plane, given in \[Mu]m. The \
+aperture plane is assumed to be at z=0.\n+ {apertureFunctionx, \
+apertureFunctiony, apertureFunctionz} (List with three functions): a list \
+with three two-variable functions which return the complex amplitude of the \
+field in the aperture plane. Input to the functions is assumed to be in \
+cartesian coordinates x,y. No attempt is made to make sure that these are \
+valid electromagnetic fields.\n+ \[Lambda]free (float): wavelength in vaccum \
+of field, given in \[Mu]m.\n+ nref  (float): refractive index of the \
+propagating medium.\n\nOptions\n-------\n+ \"numSamples\" (int or Automatic): \
+number of samples to use in the aperture plane and the observation plane. The \
+aperture plane is sampled using a uniform grid, and the observation plane is \
+also sampled using a uniform grid. The default is Automatic in which case \
+numSamples is calculated so that the sample size is equal to half the \
+wavelength of the wave inside of the propagating medium.\n\nReturns\n-------\n\
+{numSamples, xCoords, yCoords, {fieldx, fieldy, fieldz}}\n+ xCoords (List): x \
+coordinates of the observation plane, given in \[Mu]m.\n+ yCoords (List): y \
+coordinates of the observation plane, given in \[Mu]m.\n+ {fieldx, fieldy, \
+fieldz}   (List of lists): each of the given lists are 2-dimensional lists \
+which contain the complex amplitude of the cooresponding component of the \
+field in the observation plane. The top left corner of each list corresponds \
+to the lower left corner of the observation plane. The coordinates associated \
+with each element in the given lists should be taken from xCoords and \
+yCoords.\n\nReferences\n----------\n+ Shen, Fabin, and Anbo Wang. \
+\"Fast-Fourier-transform based numerical integration method for the \
+Rayleigh-Sommerfeld diffraction formula.\" Applied optics 45, no. 6 (2006): \
+1102-1110.\n\n", "Documentation" -> None, "OwnValues" -> None, "UpValues" -> 
+    None, "DownValues" -> 
+    Information`InformationValueForm[
+     DownValues, mwaves`VectorFieldProp, {mwaves`VectorFieldProp[
+         Pattern[mwaves`Lobs, 
+          Blank[]], 
+         Pattern[mwaves`z, 
+          Blank[]], {
+          Pattern[mwaves`apertureFunctionx, 
+           Blank[]], 
+          Pattern[mwaves`apertureFunctiony, 
+           Blank[]], 
+          Pattern[mwaves`apertureFunctionz, 
+           Blank[]]}, 
+         Pattern[mwaves`\[Lambda]free, 
+          Blank[]], 
+         Optional[
+          Pattern[mwaves`nref, 
+           Blank[]], 1], 
+         OptionsPattern[]] :> ({
+          mwaves`numSamplesx, mwaves`xx, mwaves`yx, mwaves`fieldx} = 
+         mwaves`ScalarFieldProp[
+          mwaves`Lobs, mwaves`z, mwaves`apertureFunctionx, 
+           mwaves`\[Lambda]free, mwaves`nref, "numSamples" -> 
+           OptionValue["numSamples"]]; {
+          mwaves`numSamplesy, mwaves`xy, mwaves`yy, mwaves`fieldy} = 
+         mwaves`ScalarFieldProp[
+          mwaves`Lobs, mwaves`z, mwaves`apertureFunctiony, 
+           mwaves`\[Lambda]free, mwaves`nref, "numSamples" -> 
+           OptionValue["numSamples"]]; {
+          mwaves`numSamplesz, mwaves`xz, mwaves`yz, mwaves`fieldz} = 
+         mwaves`ScalarFieldProp[
+          mwaves`Lobs, mwaves`z, mwaves`apertureFunctionz, 
+           mwaves`\[Lambda]free, mwaves`nref, "numSamples" -> 
+           OptionValue["numSamples"]]; 
+        Return[{mwaves`numSsamplesx, mwaves`xx, mwaves`yx, {
+           mwaves`fieldx, mwaves`fieldy, mwaves`fieldz}}]; Null)}], 
+    "SubValues" -> None, "DefaultValues" -> None, "NValues" -> None, 
+    "FormatValues" -> None, "Options" -> {"numSamples" -> Automatic}, 
+    "Attributes" -> {}, "FullName" -> "mwaves`VectorFieldProp"|>, 
+   False]]], "Output",
+ CellChangeTimes->{
+  3.897058194873527*^9, {3.897127702873622*^9, 3.897127748928344*^9}, 
+   3.897127937438263*^9},
+ CellLabel->"Out[35]=",ExpressionUUID->"9e1d75c8-7747-40d3-9227-40f6017be17a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "A", " ", "plane", " ", "wave", " ", "with", " ", "circular", " ", 
+    "polarization", " ", "at", " ", "normal", " ", "incidence", " ", "on", 
+    " ", "a", " ", "double", " ", "slit"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"\[Lambda]", "=", "1.0"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"z", "=", "9.5"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Lobs", "=", "20."}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"slitSep", ",", "slitWidth", ",", "slitLen"}], "}"}], "=", 
+     RowBox[{"{", 
+      RowBox[{"3", ",", "1", ",", "4"}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"doubleSlitx", "=", 
+     RowBox[{"Compile", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", 
+       RowBox[{
+        FractionBox["1", 
+         SqrtBox["2"]], 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"And", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"Abs", "[", 
+                RowBox[{"x", "-", 
+                 RowBox[{"slitSep", "/", "2"}]}], "]"}], "<", 
+               RowBox[{"slitWidth", "/", "2"}]}], ",", 
+              RowBox[{
+               RowBox[{"Abs", "[", "y", "]"}], "<", 
+               RowBox[{"slitLen", "/", "2"}]}]}], "]"}], ",", "1.", ",", 
+            "0."}], "]"}], "+", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"And", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"Abs", "[", 
+                RowBox[{"x", "+", 
+                 RowBox[{"slitSep", "/", "2"}]}], "]"}], "<", 
+               RowBox[{"slitWidth", "/", "2"}]}], ",", 
+              RowBox[{
+               RowBox[{"Abs", "[", "y", "]"}], "<", 
+               RowBox[{"slitLen", "/", "2"}]}]}], "]"}], ",", "1.", ",", 
+            "0."}], "]"}]}], ")"}]}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"doubleSlity", "=", 
+     RowBox[{"Compile", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", 
+       RowBox[{
+        FractionBox["1", 
+         SqrtBox["2."]], "I", "*", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"And", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"Abs", "[", 
+                RowBox[{"x", "-", 
+                 RowBox[{"slitSep", "/", "2"}]}], "]"}], "<", 
+               RowBox[{"slitWidth", "/", "2"}]}], ",", 
+              RowBox[{
+               RowBox[{"Abs", "[", "y", "]"}], "<", 
+               RowBox[{"slitLen", "/", "2"}]}]}], "]"}], ",", "1.", ",", 
+            "0."}], "]"}], "+", 
+          RowBox[{"If", "[", 
+           RowBox[{
+            RowBox[{"And", "[", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"Abs", "[", 
+                RowBox[{"x", "+", 
+                 RowBox[{"slitSep", "/", "2"}]}], "]"}], "<", 
+               RowBox[{"slitWidth", "/", "2"}]}], ",", 
+              RowBox[{
+               RowBox[{"Abs", "[", "y", "]"}], "<", 
+               RowBox[{"slitLen", "/", "2"}]}]}], "]"}], ",", "1.", ",", 
+            "0."}], "]"}]}], ")"}]}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"doubleSlitz", "=", 
+     RowBox[{"Compile", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"x", ",", "_Real"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"y", ",", "_Real"}], "}"}]}], "}"}], ",", "0."}], "]"}]}], 
+    ";"}], "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"Manipulate", "[", 
+    RowBox[{
+     RowBox[{"(", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"numSamples", ",", "x", ",", "y", ",", 
+          RowBox[{"{", 
+           RowBox[{"fieldx", ",", "fieldy", ",", "fieldz"}], "}"}]}], "}"}], 
+        "=", 
+        RowBox[{"VectorFieldProp", "[", 
+         RowBox[{"Lobs", ",", "z", ",", 
+          RowBox[{"{", 
+           RowBox[{"doubleSlitx", ",", "doubleSlity", ",", "doubleSlitz"}], 
+           "}"}], ",", "\[Lambda]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"arrayPlotx", "=", 
+        RowBox[{"ArrayPlot", "[", 
+         RowBox[{
+          RowBox[{"Re", "[", "fieldx", "]"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"FrameTicks", "->", "Automatic"}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"DataReversed", "->", "True"}], ",", "\[IndentingNewLine]", 
+          
+          RowBox[{"ColorFunction", "\[Rule]", 
+           RowBox[{"GetColorMap", "[", "\"\<watermelon\>\"", "]"}]}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"ImageSize", "->", "800"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"FrameStyle", "->", 
+           RowBox[{"Directive", "[", "15", "]"}]}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"FrameLabel", "->", 
+           RowBox[{"{", 
+            RowBox[{"\"\<x/\[Mu]m\>\"", ",", "\"\<y/\[Mu]m\>\""}], "}"}]}], 
+          ",", "\[IndentingNewLine]", 
+          RowBox[{"PlotLabel", "->", 
+           RowBox[{"\"\<z = \>\"", "<>", 
+            RowBox[{"ToString", "[", "z", "]"}], "<>", 
+            "\"\<\[Mu]m | Re(Ex)\>\""}]}], ",", "\[IndentingNewLine]", 
+          RowBox[{"DataRange", "->", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+               RowBox[{"Lobs", "/", "2"}]}], "}"}], ",", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+               RowBox[{"Lobs", "/", "2"}]}], "}"}]}], "}"}]}]}], "]"}]}], ";",
+        "\[IndentingNewLine]", 
+       RowBox[{"arrayPloty", "=", 
+        RowBox[{"ArrayPlot", "[", 
+         RowBox[{
+          RowBox[{"Re", "[", "fieldy", "]"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"FrameTicks", "->", "Automatic"}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"DataReversed", "->", "True"}], ",", "\[IndentingNewLine]", 
+          
+          RowBox[{"ColorFunction", "\[Rule]", 
+           RowBox[{"GetColorMap", "[", "\"\<watermelon\>\"", "]"}]}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"ImageSize", "->", "800"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"FrameStyle", "->", 
+           RowBox[{"Directive", "[", "15", "]"}]}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"FrameLabel", "->", 
+           RowBox[{"{", 
+            RowBox[{"\"\<x/\[Mu]m\>\"", ",", "\"\<y/\[Mu]m\>\""}], "}"}]}], 
+          ",", "\[IndentingNewLine]", 
+          RowBox[{"PlotLabel", "->", 
+           RowBox[{"\"\<z = \>\"", "<>", 
+            RowBox[{"ToString", "[", "z", "]"}], "<>", 
+            "\"\<\[Mu]m | Re(Ey)\>\""}]}], ",", "\[IndentingNewLine]", 
+          RowBox[{"DataRange", "->", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+               RowBox[{"Lobs", "/", "2"}]}], "}"}], ",", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"-", "Lobs"}], "/", "2"}], ",", 
+               RowBox[{"Lobs", "/", "2"}]}], "}"}]}], "}"}]}]}], "]"}]}], ";",
+        "\[IndentingNewLine]", 
+       RowBox[{"GraphicsGrid", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"{", 
+           RowBox[{"arrayPlotx", ",", "arrayPloty"}], "}"}], "}"}], ",", 
+         RowBox[{"ImageSize", "->", "800"}]}], "]"}]}], "\[IndentingNewLine]",
+       ")"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"z", ",", "50"}], "}"}], ",", "0.1", ",", "1000", ",", 
+       "0.1"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"Lobs", ",", "50"}], "}"}], ",", "10", ",", "200", ",", 
+       "10"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"TrackedSymbols", ":>", 
+      RowBox[{"{", 
+       RowBox[{"z", ",", "Lobs"}], "}"}]}]}], "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.897059262091096*^9, 3.897059323479589*^9}, {
+   3.897059439783258*^9, 3.8970594399818077`*^9}, 3.8971276947993097`*^9, {
+   3.897127741265953*^9, 3.89712774605754*^9}, {3.897127780780265*^9, 
+   3.897127780914714*^9}, {3.8971282694530687`*^9, 3.897128290907058*^9}, {
+   3.897128447273529*^9, 3.89712848688017*^9}, {3.897128882718157*^9, 
+   3.897128906826469*^9}, {3.897128948962618*^9, 3.897128951470232*^9}, {
+   3.897129001340198*^9, 
+   3.8971290090123863`*^9}},ExpressionUUID->"510b9f7b-7c6d-4a49-9af4-\
+363bac04912b"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{mwaves`Lobs$$ = 50, mwaves`z$$ = 237.70000000000002`, 
+    Typeset`show$$ = True, Typeset`bookmarkList$$ = {}, 
+    Typeset`bookmarkMode$$ = "Menu", Typeset`animator$$, Typeset`animvar$$ = 
+    1, Typeset`name$$ = "\"untitled\"", Typeset`specs$$ = {{{
+       Hold[mwaves`z$$], 50}, 0.1, 1000, 0.1}, {{
+       Hold[mwaves`Lobs$$], 50}, 10, 200, 10}}, Typeset`size$$ = {
+    800., {203., 208.}}, Typeset`update$$ = 0, Typeset`initDone$$, 
+    Typeset`skipInitDone$$ = True}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     1, StandardForm, "Variables" :> {mwaves`Lobs$$ = 50, mwaves`z$$ = 50}, 
+      "ControllerVariables" :> {}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$}, 
+      "Body" :> ({
+         mwaves`numSamples, mwaves`x, mwaves`y, {
+          mwaves`fieldx, mwaves`fieldy, mwaves`fieldz}} = 
+        mwaves`VectorFieldProp[
+         mwaves`Lobs$$, 
+          mwaves`z$$, {$CellContext`doubleSlitx, $CellContext`doubleSlity, \
+$CellContext`doubleSlitz}, mwaves`\[Lambda]]; $CellContext`arrayPlotx = 
+        ArrayPlot[
+          Re[mwaves`fieldx], FrameTicks -> Automatic, DataReversed -> True, 
+          ColorFunction -> mwaves`GetColorMap["watermelon"], ImageSize -> 800,
+           FrameStyle -> Directive[15], 
+          FrameLabel -> {"x/\[Mu]m", "y/\[Mu]m"}, PlotLabel -> 
+          "z = " <> ToString[mwaves`z$$] <> "\[Mu]m | Re(Ex)", 
+          DataRange -> {{(-mwaves`Lobs$$)/2, mwaves`Lobs$$/
+             2}, {(-mwaves`Lobs$$)/2, mwaves`Lobs$$/
+             2}}]; $CellContext`arrayPloty = ArrayPlot[
+          Re[mwaves`fieldy], FrameTicks -> Automatic, DataReversed -> True, 
+          ColorFunction -> mwaves`GetColorMap["watermelon"], ImageSize -> 800,
+           FrameStyle -> Directive[15], 
+          FrameLabel -> {"x/\[Mu]m", "y/\[Mu]m"}, PlotLabel -> 
+          "z = " <> ToString[mwaves`z$$] <> "\[Mu]m | Re(Ey)", 
+          DataRange -> {{(-mwaves`Lobs$$)/2, mwaves`Lobs$$/
+             2}, {(-mwaves`Lobs$$)/2, mwaves`Lobs$$/2}}]; 
+       GraphicsGrid[{{$CellContext`arrayPlotx, $CellContext`arrayPloty}}, 
+         ImageSize -> 800]), 
+      "Specifications" :> {{{mwaves`z$$, 50}, 0.1, 1000, 0.1}, {{
+         mwaves`Lobs$$, 50}, 10, 200, 10}}, 
+      "Options" :> {TrackedSymbols :> {mwaves`z$$, mwaves`Lobs$$}}, 
+      "DefaultOptions" :> {}],
+     ImageSizeCache->{844., {262., 268.}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UndoTrackedVariables:>{Typeset`show$$, Typeset`bookmarkMode$$},
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{{3.8971277312777777`*^9, 3.897127781511991*^9}, 
+   3.897128913091084*^9, 3.89712895180062*^9},
+ CellLabel->
+  "Out[238]=",ExpressionUUID->"bc564417-2d08-4b58-9f5a-fce8a3dd77a8"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1141, 1057},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+TaggingRules-><|"TryRealOnly" -> False|>,
+FrontEndVersion->"13.1 for Mac OS X ARM (64-bit) (June 16, 2022)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"d26ad9ed-4875-4aa4-9ddb-a562943e5ec2"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 349, 5, 98, "Title",ExpressionUUID->"4e77af89-c8c7-46cd-9704-2b3d5890d251"],
+Cell[932, 29, 1327, 22, 81, "Text",ExpressionUUID->"6580d737-07c5-4db8-886b-36bd9e1ae0c5"],
+Cell[2262, 53, 556, 12, 73, "Input",ExpressionUUID->"c36afee8-70ba-4f5c-9156-44a287de0303"],
+Cell[CellGroupData[{
+Cell[2843, 69, 311, 5, 67, "Section",ExpressionUUID->"84e4fbe5-cdf8-482a-92a2-0b1b41abad2f"],
+Cell[CellGroupData[{
+Cell[3179, 78, 255, 4, 30, "Input",ExpressionUUID->"9583258e-6968-411a-9bfb-bcce54040e08"],
+Cell[3437, 84, 40324, 821, 1465, "Output",ExpressionUUID->"03ab4943-5f18-4bff-99a5-05b825ed9dd5"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[43798, 910, 5027, 127, 535, "Input",ExpressionUUID->"f4d09a24-b977-4e47-b4b9-804515b0fe7b"],
+Cell[48828, 1039, 2533, 49, 936, "Output",ExpressionUUID->"69cda8b6-9cdf-45dc-bb5b-8f4b13857bf7"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[51398, 1093, 7131, 168, 631, "Input",ExpressionUUID->"208efc47-f7b0-4069-b0a3-7d98239cfc41"],
+Cell[58532, 1263, 3034, 57, 936, "Output",ExpressionUUID->"0cbe2abd-7b14-42b4-aa36-d65a2caedc92"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[61603, 1325, 7263, 191, 743, "Input",ExpressionUUID->"b67d11f6-c29f-4f2f-a8fc-9a0d04feace5"],
+Cell[68869, 1518, 2664, 51, 908, "Output",ExpressionUUID->"c8acbbb5-aa24-4ddf-bdd2-a92c692c60a4"]
+}, Open  ]]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[71582, 1575, 335, 5, 67, "Section",ExpressionUUID->"87de81bb-dedd-41d7-a58d-a318b40d49d2"],
+Cell[CellGroupData[{
+Cell[71942, 1584, 307, 5, 30, "Input",ExpressionUUID->"7d377927-e85c-4837-bbd7-4961582495b5"],
+Cell[72252, 1591, 22894, 456, 945, "Output",ExpressionUUID->"9e1d75c8-7747-40d3-9227-40f6017be17a"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[95183, 2052, 9122, 231, 890, "Input",ExpressionUUID->"510b9f7b-7c6d-4a49-9af4-363bac04912b"],
+Cell[104308, 2285, 3198, 62, 549, "Output",ExpressionUUID->"bc564417-2d08-4b58-9f5a-fce8a3dd77a8"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
